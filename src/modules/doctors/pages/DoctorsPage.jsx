@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
+import Modal from '../../shared/components/Modal';
+import NewDoctorForm from './components/NewDoctorForm';
 
 function DoctorsPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
 
   const doctorsList = [
     {
@@ -108,7 +115,7 @@ function DoctorsPage() {
           </Button>
 
           <Button
-            onClick={() => alert('Abrir modal de nuevo doctor')}
+            onClick={() => handleOpenCreateModal()}
             className="flex items-center gap-1.5 bg-med-primary-700 hover:bg-med-primary-800 text-white"
           >
             <span>+</span>
@@ -281,6 +288,16 @@ function DoctorsPage() {
           </div>
         </div>
       </Card>
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Nuevo Doctor"
+      >
+        <NewDoctorForm
+          onSuccess={() => setIsCreateModalOpen(false)}
+          onCancel={() => setIsCreateModalOpen(false)}
+        />
+      </Modal>
     </div>
   );
 }
