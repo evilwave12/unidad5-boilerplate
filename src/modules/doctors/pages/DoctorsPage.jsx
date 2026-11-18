@@ -3,7 +3,7 @@ import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import Modal from '../../shared/components/Modal';
 import NewDoctorForm from './components/NewDoctorForm';
-import NewAvailability from './NewAvailability';
+import AvailabilityPage from './AvailabilityPage';
 import { useNavigate } from 'react-router-dom';
 
 function DoctorsPage() {
@@ -100,7 +100,7 @@ function DoctorsPage() {
 
           <Button
             //onClick={() => alert('Abrir modal de disponibilidad horaria')}
-            onClick={() => navigate('/admin/doctors/newavailability')}
+            onClick={() => navigate('/admin/doctors/availability')}
             className="flex items-center gap-2 bg-med-primary-900 hover:bg-med-primary-800 text-white"
           >
             <svg
