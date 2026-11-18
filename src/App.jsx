@@ -23,6 +23,7 @@ import OverviewPage from './modules/dashboard/pages/OverviewPage';
 import DoctorsPage from './modules/doctors/pages/DoctorsPage';
 import SpecialtiesPage from './modules/specialties/pages/SpecialtiesPage';
 import AppointmentsSearchPage from './modules/appointments/pages/AppointmentsSearchPage';
+import NewAvailability from './modules/doctors/pages/NewAvailability';
 
 const routes = [
   // Rutas públicas
@@ -91,6 +92,10 @@ const routes = [
       {
         path: 'doctors',
         element: <DoctorsPage />,
+      },
+      {
+        path: 'doctors/newavailability',
+        element: <NewAvailability />,
       },
     ],
   },
