@@ -1,11 +1,11 @@
 import axios from 'axios';
 
-const instance = axios.create({
+const backInstance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
   withCredentials: true,
 });
 
-instance.interceptors.request.use(
+backInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
 
@@ -18,7 +18,7 @@ instance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-instance.interceptors.response.use(
+backInstance.interceptors.response.use(
   (config) => {
     return config;
   },
@@ -36,4 +36,4 @@ instance.interceptors.response.use(
   }
 );
 
-export { instance };
+export { backInstance };
