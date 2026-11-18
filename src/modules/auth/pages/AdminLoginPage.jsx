@@ -123,7 +123,7 @@ function AdminLoginPage() {
             {/* Contraseña */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-med-text-main">
-                Contraseña
+                DNI
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-med-text-muted">
@@ -150,18 +150,14 @@ function AdminLoginPage() {
                       : 'border-med-border'
                   }`}
                   {...register('password', {
-                    required: 'La contraseña es obligatoria',
+                    required: 'El DNI es obligatorio',
                   })}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={
-                    showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
-                  }
-                  title={
-                    showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
-                  }
+                  aria-label={showPassword ? 'Ocultar DNI' : 'Mostrar DNI'}
+                  title={showPassword ? 'Ocultar DNI' : 'Mostrar DNI'}
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-med-text-muted hover:text-med-text-main"
                 >
                   {showPassword ? (
