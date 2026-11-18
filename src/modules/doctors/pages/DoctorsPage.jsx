@@ -3,10 +3,14 @@ import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import Modal from '../../shared/components/Modal';
 import NewDoctorForm from './components/NewDoctorForm';
+import NewAvailability from './NewAvailability';
+import { useNavigate } from 'react-router-dom';
 
 function DoctorsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
+  const navigate = useNavigate();
 
   const handleOpenCreateModal = () => {
     setIsCreateModalOpen(true);
@@ -95,7 +99,8 @@ function DoctorsPage() {
           </div>
 
           <Button
-            onClick={() => alert('Abrir modal de disponibilidad horaria')}
+            //onClick={() => alert('Abrir modal de disponibilidad horaria')}
+            onClick={() => navigate('/admin/doctors/newavailability')}
             className="flex items-center gap-2 bg-med-primary-900 hover:bg-med-primary-800 text-white"
           >
             <svg
@@ -112,6 +117,7 @@ function DoctorsPage() {
               />
             </svg>
             <span>Agregar Disponibilidad Horaria</span>
+            
           </Button>
 
           <Button
@@ -288,6 +294,7 @@ function DoctorsPage() {
           </div>
         </div>
       </Card>
+      
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
