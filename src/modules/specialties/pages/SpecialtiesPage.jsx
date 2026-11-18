@@ -233,7 +233,7 @@ function SpecialtiesPage() {
 
                       <button
                         title="Eliminar especialidad"
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-med-text-muted hover:text-med-danger-text transition"
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-med-danger-text transition"
                         onClick={() =>
                           alert(`Eliminar especialidad ${spec.name}`)
                         }

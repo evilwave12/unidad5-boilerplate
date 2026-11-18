@@ -75,9 +75,9 @@ function LoginForm({ redirectPath, title }) {
         error={errors.username?.message}
       />
       <Input
-        label="Contraseña"
+        label="DNI"
         {...register('password', {
-          required: 'Contraseña es obligatorio',
+          required: 'DNI es obligatorio',
         })}
         type="password"
         error={errors.password?.message}

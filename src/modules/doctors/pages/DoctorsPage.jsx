@@ -185,7 +185,7 @@ function DoctorsPage() {
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-med-danger-bg text-med-danger-text">
                         <span className="w-1.5 h-1.5 rounded-full bg-med-danger-text" />
-                        On Leave
+                        Inactivo
                       </span>
                     )}
                   </td>
