@@ -36,6 +36,8 @@ function NewSpecialtiesForm({ onSuccess, onCancel }) {
         placeholder="Ej. Cardiología Intervencionista"
         {...register('name', {
           required: 'El nombre de la especialidad es obligatorio',
+          minLength: {value:3, message:"Debe tener al menos 3 caractéres"},
+          maxLength:{value: 100, message:"Debe tener menos de 100 caractéres"},
         })}
         error={errors.name?.message}
       />
@@ -51,6 +53,8 @@ function NewSpecialtiesForm({ onSuccess, onCancel }) {
         placeholder='Detalle el alcance de la especialidad, procedimientos principales y requisitos de derivación'
         {...register('description',{
           required:'La descripción de la especialidad es obligatoria',
+          minLength: {value:10, message:"Debe tener al menos 10 caractéres"},
+          maxLength:{value: 100, message:"Debe tener menos de 100 caractéres"},
         })}
         />
 
