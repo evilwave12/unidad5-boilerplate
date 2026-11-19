@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
+import Modal from '../../shared/components/Modal';
+import NewSpecialtiesForm from './components/NewSpecialtiesForm';
 
 function SpecialtiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
 
   const specialtiesList = [
     {
@@ -144,8 +150,8 @@ function SpecialtiesPage() {
 
           {/* Botón Nueva Especialidad */}
           <Button
-            onClick={() => alert('Abrir modal para crear nueva especialidad')}
-            className="flex items-center gap-1.5 bg-med-primary-900 hover:bg-med-primary-800 text-white font-medium"
+            onClick={() => handleOpenCreateModal()}
+            className="flex items-center gap-1.5 bg-med-primary-700 hover:bg-med-primary-800 text-white"
           >
             <span>+</span>
             <span>Nueva Especialidad</span>
@@ -273,6 +279,18 @@ function SpecialtiesPage() {
           </div>
         </div>
       </Card>
+      
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Nueva Especialidad"
+      >
+        <NewSpecialtiesForm
+          onSuccess={() => setIsCreateModalOpen(false)}
+          onCancel={() => setIsCreateModalOpen(false)}
+        />
+      </Modal>
+      
     </div>
   );
 }
