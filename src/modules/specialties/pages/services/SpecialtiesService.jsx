@@ -2,7 +2,7 @@ import { backInstance } from '../../../shared/api/axiosInstance';
 
 export const getSpecialties = async (pageSize = 10, pageIndex = 1, name='') => {
   const params = {pageSize, pageIndex};
-  if(name.trim().length()<=3){
+  if(name.trim().length >= 3){
     params.name = name.trim();
   }
   const response = await backInstance.get('api/specialties',{ params });
@@ -14,7 +14,12 @@ export const createSpecialty = async (specialty) => {
   return response.data;
 };
 
+export const deleteSpecialty = async(id) => {
+  await backInstance.delete('api/specialties/'+id)
+}
+
 export const SpecialtiesService = {
   getSpecialties,
   createSpecialty,
+  deleteSpecialty,
 };

@@ -24,8 +24,12 @@ function NewSpecialtiesForm({ onSuccess, onCancel }) {
       setErrorMessage('');
       await SpecialtiesService.createSpecialty(formData);
       onSuccess();
-    } catch {
-      setErrorMessage('No se pudo crear la especialidad. Intente nuevamente.');
+    } catch (error) {
+      if(error.response?.status === 409){
+        setErrorMessage('Ya existe una especialidad con ese nombre.');
+      }else{
+        setErrorMessage('No se pudo crear la especialidad. Intente nuevamente.');        
+      }
     }
   };
 
