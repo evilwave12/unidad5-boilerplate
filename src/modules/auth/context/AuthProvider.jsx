@@ -30,15 +30,14 @@ function AuthProvider({ children }) {
     }
 
     setAuthSession(data);
-
     return { error: null };
   };
 
-  const singinAdmin = async (username, password) => {
-    if (
-      (username === 'admin' ||
-        username === 'admin@medportal.com' ||
-        username === 'admin@test.com') &&
+  const singinAdmin = async (email, password) => {
+    if ( //con esto nos logueamos cuando el back no está encendido
+      (email === 'admin' ||
+        email === 'admin@medportal.com' ||
+        email === 'admin@test.com') &&
       password === 'admin123'
     ) {
       setAuthSession('mock-admin-token-12345');
@@ -46,7 +45,7 @@ function AuthProvider({ children }) {
       return { error: null };
     }
 
-    const { data, error } = await loginAdmin(username, password);
+    const { data, error } = await loginAdmin(email, password);
 
     if (error) {
       return { error };

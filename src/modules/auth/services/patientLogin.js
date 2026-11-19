@@ -1,4 +1,4 @@
-import { instance } from '../../shared/api/axiosInstance';
+import { backInstance } from '../../shared/api/axiosInstance';
 
 export const loginPatient = async (username, password) => {
   if (
@@ -10,7 +10,7 @@ export const loginPatient = async (username, password) => {
     return { data: 'mock-patient-token-67890', error: null };
   }
 
-  const response = await instance.post('api/patient/auth/login', {
+  const response = await backInstance.post('api/patient/auth/login', {
     username,
     password,
   });
