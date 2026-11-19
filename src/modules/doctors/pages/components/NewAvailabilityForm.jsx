@@ -8,16 +8,58 @@ import {
 } from '../services/AvailabilityService';
 
 const INITIAL_DAYS = [
-  { key: 'LUNES', label: 'Lunes', active: false, startTime: '08:00', endTime: '16:00' },
-  { key: 'MARTES', label: 'Martes', active: false, startTime: '08:00', endTime: '16:00' },
-  { key: 'MIÉRCOLES', label: 'Miércoles', active: false, startTime: '08:00', endTime: '16:00' },
-  { key: 'JUEVES', label: 'Jueves', active: false, startTime: '08:00', endTime: '16:00' },
-  { key: 'VIERNES', label: 'Viernes', active: false, startTime: '08:00', endTime: '16:00' },
-  { key: 'SÁBADO', label: 'Sábado', active: false, startTime: '08:00', endTime: '12:00' },
-  { key: 'DOMINGO', label: 'Domingo', active: false, startTime: '08:00', endTime: '12:00' },
+  {
+    key: 'LUNES',
+    label: 'Lunes',
+    active: false,
+    startTime: '08:00',
+    endTime: '16:00',
+  },
+  {
+    key: 'MARTES',
+    label: 'Martes',
+    active: false,
+    startTime: '08:00',
+    endTime: '16:00',
+  },
+  {
+    key: 'MIÉRCOLES',
+    label: 'Miércoles',
+    active: false,
+    startTime: '08:00',
+    endTime: '16:00',
+  },
+  {
+    key: 'JUEVES',
+    label: 'Jueves',
+    active: false,
+    startTime: '08:00',
+    endTime: '16:00',
+  },
+  {
+    key: 'VIERNES',
+    label: 'Viernes',
+    active: false,
+    startTime: '08:00',
+    endTime: '16:00',
+  },
+  {
+    key: 'SÁBADO',
+    label: 'Sábado',
+    active: false,
+    startTime: '08:00',
+    endTime: '12:00',
+  },
+  {
+    key: 'DOMINGO',
+    label: 'Domingo',
+    active: false,
+    startTime: '08:00',
+    endTime: '12:00',
+  },
 ];
 
-const INITIAL_DOCTORS=[
+const INITIAL_DOCTORS = [
   { id: 1, name: 'Dr. Juan Pérez', specialty: { name: 'Cardiología' } },
   { id: 2, name: 'Dra. Ana Gómez', specialty: { name: 'Pediatría' } },
   { id: 3, name: 'Dr. Carlos López', specialty: { name: 'Dermatología' } },
@@ -101,7 +143,9 @@ function NewAvailabilityForm() {
 
         setDaysSchedule(updatedTable);
       } catch {
-        setErrorMessage('Error al obtener la disponibilidad del médico seleccionado.');
+        setErrorMessage(
+          'Error al obtener la disponibilidad del médico seleccionado.'
+        );
         setDaysSchedule(INITIAL_DAYS);
         setIsUpdate(false);
       } finally {
@@ -112,7 +156,9 @@ function NewAvailabilityForm() {
     fetchAvailabilities();
   }, [selectedDoctorId]);
 
-  const selectedDoctor = doctors.find((d) => String(d.id) === String(selectedDoctorId));
+  const selectedDoctor = doctors.find(
+    (d) => String(d.id) === String(selectedDoctorId)
+  );
 
   // Activar / desactivar switch de un día
   const handleToggleDay = (dayKey) => {
@@ -146,7 +192,9 @@ function NewAvailabilityForm() {
     const activeDays = daysSchedule.filter((d) => d.active);
 
     if (!isUpdate && activeDays.length === 0) {
-      setErrorMessage('Debe activar al menos un día de atención para crear la disponibilidad.');
+      setErrorMessage(
+        'Debe activar al menos un día de atención para crear la disponibilidad.'
+      );
       return;
     }
 
@@ -177,7 +225,8 @@ function NewAvailabilityForm() {
     } catch (error) {
       const backendMsg = error.response?.data?.message;
       setErrorMessage(
-        backendMsg || 'No se pudo guardar la disponibilidad. Verifique los datos.'
+        backendMsg ||
+          'No se pudo guardar la disponibilidad. Verifique los datos.'
       );
     } finally {
       setIsSubmitting(false);
@@ -185,7 +234,10 @@ function NewAvailabilityForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <form
+      onSubmit={handleSubmit}
+      className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+    >
       {/* Columna Izquierda: Selector de Médico y Tarjeta Informativa */}
       <div className="lg:col-span-4 flex flex-col gap-5">
         <div className="bg-white border border-med-border rounded-xl p-5 shadow-sm flex flex-col gap-4">
@@ -201,12 +253,15 @@ function NewAvailabilityForm() {
             >
               {doctors.length === 0 && (
                 <option value="">
-                  {loadingDoctors ? 'Cargando médicos...' : 'Sin médicos registrados'}
+                  {loadingDoctors
+                    ? 'Cargando médicos...'
+                    : 'Sin médicos registrados'}
                 </option>
               )}
               {doctors.map((doc) => (
                 <option key={doc.id} value={doc.id}>
-                  {doc.name} {doc.specialty?.name ? `- ${doc.specialty.name}` : ''}
+                  {doc.name}{' '}
+                  {doc.specialty?.name ? `- ${doc.specialty.name}` : ''}
                 </option>
               ))}
             </select>
@@ -232,9 +287,28 @@ function NewAvailabilityForm() {
           )}
         </div>
 
-        <div className="bg-slate-50 border border-med-border rounded-xl p-4 text-xs text-med-text-muted leading-relaxed">
-          Los cambios realizados se aplicarán a partir de la próxima semana calendario.
-          Las citas ya programadas no se verán afectadas automáticamente.
+        <div className="flex items-start gap-3 bg-slate-50 border border-med-border rounded-xl p-4 text-xs text-med-text-muted leading-relaxed">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="shrink-0 mt-0.5"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" x2="12" y1="8" y2="12" />
+            <line x1="12" x2="12.01" y1="16" y2="16" />
+          </svg>
+          <p>
+            Los cambios realizados se aplicarán a partir de la próxima semana
+            calendario. Las citas ya programadas no se verán afectadas
+            automáticamente.
+          </p>
         </div>
       </div>
 
@@ -242,11 +316,26 @@ function NewAvailabilityForm() {
       <div className="lg:col-span-8 bg-white border border-med-border rounded-xl shadow-sm overflow-hidden flex flex-col justify-between">
         <div>
           <div className="flex flex-wrap items-center justify-between gap-2 px-6 py-4 border-b border-med-border">
-            <h3 className="font-bold text-sm text-med-primary-900">
+            <h3 className="font-bold text-lg text-med-primary-900">
               Configuración de Horarios
             </h3>
-            <span className="text-xs text-med-text-muted">
-              ⏱ Intervalos automáticos de 30 minutos
+            <span className="flex items-center gap-1.5 text-xs text-med-text-muted">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              Intervalos automáticos de 30 minutos
             </span>
           </div>
 
@@ -269,7 +358,9 @@ function NewAvailabilityForm() {
                   {daysSchedule.map((item) => (
                     <tr
                       key={item.key}
-                      className={!item.active ? 'bg-slate-50/50 text-med-text-muted' : ''}
+                      className={
+                        !item.active ? 'bg-slate-50/50 text-med-text-muted' : ''
+                      }
                     >
                       <td className="py-3.5 px-6 font-medium text-med-text-main">
                         {item.label}
@@ -287,7 +378,9 @@ function NewAvailabilityForm() {
                           <div className="w-10 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all relative peer-checked:bg-med-primary-600" />
                           <span
                             className={`text-xs font-semibold ${
-                              item.active ? 'text-med-primary-600' : 'text-slate-400'
+                              item.active
+                                ? 'text-med-primary-600'
+                                : 'text-slate-400'
                             }`}
                           >
                             {item.active ? 'Activo' : 'Inactivo'}
@@ -303,7 +396,11 @@ function NewAvailabilityForm() {
                           disabled={!item.active}
                           value={item.active ? item.startTime : ''}
                           onChange={(e) =>
-                            handleTimeChange(item.key, 'startTime', e.target.value)
+                            handleTimeChange(
+                              item.key,
+                              'startTime',
+                              e.target.value
+                            )
                           }
                           className="border border-med-border rounded-lg px-3 py-1.5 text-xs bg-white text-med-text-main disabled:bg-slate-100 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-med-primary-600"
                         />
@@ -317,7 +414,11 @@ function NewAvailabilityForm() {
                           disabled={!item.active}
                           value={item.active ? item.endTime : ''}
                           onChange={(e) =>
-                            handleTimeChange(item.key, 'endTime', e.target.value)
+                            handleTimeChange(
+                              item.key,
+                              'endTime',
+                              e.target.value
+                            )
                           }
                           className="border border-med-border rounded-lg px-3 py-1.5 text-xs bg-white text-med-text-main disabled:bg-slate-100 disabled:text-slate-400 focus:outline-none focus:ring-2 focus:ring-med-primary-600"
                         />
@@ -336,7 +437,9 @@ function NewAvailabilityForm() {
             <p className="text-xs text-red-600 font-medium">{errorMessage}</p>
           )}
           {successMessage && (
-            <p className="text-xs text-emerald-600 font-medium">{successMessage}</p>
+            <p className="text-xs text-emerald-600 font-medium">
+              {successMessage}
+            </p>
           )}
 
           <div className="flex justify-end gap-3">
