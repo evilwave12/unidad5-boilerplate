@@ -34,7 +34,7 @@ function AuthProvider({ children }) {
   };
 
   const singinAdmin = async (email, password) => {
-    /*if (
+    if ( //con esto nos logueamos cuando el back no está encendido
       (email === 'admin' ||
         email === 'admin@medportal.com' ||
         email === 'admin@test.com') &&
@@ -43,7 +43,7 @@ function AuthProvider({ children }) {
       setAuthSession('mock-admin-token-12345');
 
       return { error: null };
-    }*/
+    }
 
     const { data, error } = await loginAdmin(email, password);
 
