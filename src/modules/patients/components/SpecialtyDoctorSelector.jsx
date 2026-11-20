@@ -2,12 +2,14 @@ import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 
 function SpecialtyDoctorSelector({
-  selectedSpecialty,
+  specialties = [],
+  selectedSpecialtyId,
   onSpecialtyChange,
-  doctors,
+  doctors = [],
   selectedDoctorId,
   onDoctorChange,
   onSearch,
+  loading = false,
 }) {
   return (
     <Card className="p-6 sm:p-7">
@@ -28,15 +30,22 @@ function SpecialtyDoctorSelector({
           </label>
           <div className="relative">
             <select
-              value={selectedSpecialty}
+              value={selectedSpecialtyId}
               onChange={(e) => onSpecialtyChange(e.target.value)}
-              className="w-full appearance-none px-3.5 py-2.5 text-sm bg-white border border-med-border rounded-lg text-med-text-main focus:outline-none focus:ring-2 focus:ring-med-primary-600 pr-10 cursor-pointer"
+              disabled={loading || specialties.length === 0}
+              className="w-full appearance-none px-3.5 py-2.5 text-sm bg-white border border-med-border rounded-lg text-med-text-main focus:outline-none focus:ring-2 focus:ring-med-primary-600 pr-10 cursor-pointer disabled:bg-gray-50 disabled:text-med-text-muted"
             >
-              <option value="Cardiología">Cardiología</option>
-              <option value="Pediatría">Pediatría</option>
-              <option value="Neurología">Neurología</option>
-              <option value="Dermatología">Dermatología</option>
-              <option value="Medicina General">Medicina General</option>
+              {loading ? (
+                <option value="">Cargando especialidades...</option>
+              ) : specialties.length === 0 ? (
+                <option value="">Sin especialidades disponibles</option>
+              ) : (
+                specialties.map((spec) => (
+                  <option key={spec.id} value={spec.id}>
+                    {spec.name}
+                  </option>
+                ))
+              )}
             </select>
             <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-med-text-muted">
               ▼
@@ -53,13 +62,20 @@ function SpecialtyDoctorSelector({
             <select
               value={selectedDoctorId}
               onChange={(e) => onDoctorChange(e.target.value)}
-              className="w-full appearance-none px-3.5 py-2.5 text-sm bg-white border border-med-border rounded-lg text-med-text-main focus:outline-none focus:ring-2 focus:ring-med-primary-600 pr-10 cursor-pointer"
+              disabled={loading || doctors.length === 0}
+              className="w-full appearance-none px-3.5 py-2.5 text-sm bg-white border border-med-border rounded-lg text-med-text-main focus:outline-none focus:ring-2 focus:ring-med-primary-600 pr-10 cursor-pointer disabled:bg-gray-50 disabled:text-med-text-muted"
             >
-              {doctors.map((doc) => (
-                <option key={doc.id} value={doc.id}>
-                  {doc.name}
-                </option>
-              ))}
+              {loading ? (
+                <option value="">Cargando doctores...</option>
+              ) : doctors.length === 0 ? (
+                <option value="">No hay doctores en esta especialidad</option>
+              ) : (
+                doctors.map((doc) => (
+                  <option key={doc.id} value={doc.id}>
+                    {doc.name}
+                  </option>
+                ))
+              )}
             </select>
             <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-med-text-muted">
               ▼
@@ -71,7 +87,8 @@ function SpecialtyDoctorSelector({
         <div className="md:col-span-3">
           <Button
             type="button"
-            className="w-full flex items-center justify-center gap-2 bg-med-primary-900 hover:bg-med-primary-800 text-white font-medium py-2.5 rounded-lg shadow-sm"
+            disabled={loading || !selectedDoctorId}
+            className="w-full flex items-center justify-center gap-2 bg-med-primary-900 hover:bg-med-primary-800 text-white font-medium py-2.5 rounded-lg shadow-sm disabled:opacity-50"
             onClick={onSearch}
           >
             <svg
