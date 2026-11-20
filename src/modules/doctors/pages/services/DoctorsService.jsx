@@ -33,3 +33,7 @@ export const saveDoctorAvailabilities = async (payload, isUpdate) => {
   const { data } = await backInstance.post('/api/availabilities', payload);
   return data;
 };
+
+export const deleteDoctor = async(id) => {
+  await backInstance.delete('api/doctors/'+id)
+}
