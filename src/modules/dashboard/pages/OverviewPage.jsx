@@ -2,8 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import DashboardTable from '../components/DashboardTable';
+import DashboardCards from '../components/DashboardTable';
 import { useState, useEffect, useCallback } from 'react';
-import { getDoctors} from '../../doctors/pages/services/DoctorsService';
+import { getDoctors} from '../../doctors/services/DoctorsService';
 
 function OverviewPage() {
   const navigate = useNavigate();

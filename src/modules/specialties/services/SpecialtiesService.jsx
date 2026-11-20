@@ -1,4 +1,4 @@
-import { backInstance } from '../../../shared/api/axiosInstance';
+import { backInstance } from '../../shared/api/axiosInstance';
 
 export const getSpecialties = async (pageSize, pageIndex, name='') => {
   const params = {pageSize, pageIndex};

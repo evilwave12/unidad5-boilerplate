@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import Button from '../../shared/components/Button';
 import Modal from '../../shared/components/Modal';
-import NewSpecialtiesForm from './components/NewSpecialtiesForm';
-import SpecialtiesTable from './components/SpecialtiesTable';
-import { SpecialtiesService } from './services/SpecialtiesService';
+import NewSpecialtiesForm from '../components/NewSpecialtiesForm';
+import SpecialtiesTable from '../components/SpecialtiesTable';
+import { SpecialtiesService } from '../services/SpecialtiesService';
 
 function SpecialtiesPage() {
   const [specialties, setSpecialties] = useState([]);

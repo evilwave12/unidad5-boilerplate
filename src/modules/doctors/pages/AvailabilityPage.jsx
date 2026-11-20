@@ -1,4 +1,4 @@
-import NewAvailabilityForm from './components/NewAvailabilityForm'
+import NewAvailabilityForm from '../components/NewAvailabilityForm'
 
 function AvailabilityPage(){
     

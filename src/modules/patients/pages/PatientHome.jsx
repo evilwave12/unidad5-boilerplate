@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 
-import { DoctorsService } from '../../doctors/pages/services/DoctorsService';
-import { SpecialtiesService } from '../../specialties/pages/services/SpecialtiesService';
-import {AvailabilityService} from '../../doctors/pages/services/AvailabilityService';
+import { DoctorsService } from '../../doctors/services/DoctorsService';
+import { SpecialtiesService } from '../../specialties/services/SpecialtiesService';
+//import {AvailabilityService} from '../../doctors/services/AvailabilityService';
 
 import SpecialtyDoctorSelector from '../components/SpecialtyDoctorSelector';
 import DoctorInformation from '../components/DoctorInformation';

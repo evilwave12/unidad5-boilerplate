@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import AppointmentService from './services/AppointmentService';
-import AppointmentsFilterForm from './components/AppointmentsFilterForm';
-import AppointmentsTable from './components/AppointmentsTable';
+import AppointmentService from '../services/AppointmentService';
+import AppointmentsFilterForm from '../components/AppointmentsFilterForm';
+import AppointmentsTable from '../components/AppointmentsTable';
 
 const INITIAL_FILTERS = {
   dni: '',
