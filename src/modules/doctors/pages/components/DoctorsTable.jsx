@@ -66,7 +66,7 @@ function DoctorsTable({
                           {doc.name}
                         </p>
                         <p className="text-xs text-med-text-muted mt-0.5">
-                          LICENCIA: {doc.licenseNumber}
+                         Matrícula: {doc.licenseNumber}
                         </p>
                       </div>
                     </div>
@@ -189,6 +189,7 @@ function DoctorsTable({
           >
               ‹
             </button>
+            {pageIndex}
             <button
             disabled={pageIndex * pageSize >= totalCount}
             onClick={() => onPageChange(pageIndex + 1)}
