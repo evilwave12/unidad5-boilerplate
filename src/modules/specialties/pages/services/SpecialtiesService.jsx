@@ -1,6 +1,6 @@
 import { backInstance } from '../../../shared/api/axiosInstance';
 
-export const getSpecialties = async (pageSize = 10, pageIndex = 1, name='') => {
+export const getSpecialties = async (pageSize, pageIndex, name='') => {
   const params = {pageSize, pageIndex};
   if(name.trim().length >= 3){
     params.name = name.trim();

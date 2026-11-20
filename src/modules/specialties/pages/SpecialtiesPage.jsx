@@ -24,7 +24,8 @@ function SpecialtiesPage() {
       setIsLoading(true);
       const result = await SpecialtiesService.getSpecialties(
         pageSize,
-        pageIndex
+        pageIndex,
+        searchTerm
       );
       /*const items = result.items ?? result.data ?? result ?? [];*/
       setSpecialties(result.data ?? []);
@@ -34,10 +35,17 @@ function SpecialtiesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [pageIndex]);
+  }, [pageIndex, searchTerm]);
+
+  /*useEffect(() => {
+    fetchSpecialties();
+  }, [fetchSpecialties]);*/
 
   useEffect(() => {
-    fetchSpecialties();
+    const timer = setTimeout(() => {
+      fetchSpecialties();
+    }, 300);
+    return () => clearTimeout(timer);
   }, [fetchSpecialties]);
 
   //Handler de crear :p
@@ -68,11 +76,11 @@ function SpecialtiesPage() {
     }
   };
 
-  const filteredSpecialties = specialties.filter(
+  /*const filteredSpecialties = specialties.filter(
     (item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  );*/
 
   return (
     <div className="flex flex-col gap-6">
@@ -110,7 +118,10 @@ function SpecialtiesPage() {
               type="text"
               placeholder="Buscar especialidad..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPageIndex(1); //volver siempre a la página 1
+              }}
               className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-med-border rounded-lg text-med-text-main placeholder-med-text-muted focus:outline-none focus:ring-1 focus:ring-med-primary-600"
             />
           </div>
@@ -127,7 +138,7 @@ function SpecialtiesPage() {
 
       {/* Tabla */}
       <SpecialtiesTable
-        specialties={filteredSpecialties}
+        specialties={specialties}
         isLoading={isLoading}
         totalCount={totalCount}
         pageIndex={pageIndex}
