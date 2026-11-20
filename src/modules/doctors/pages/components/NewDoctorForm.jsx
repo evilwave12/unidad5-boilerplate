@@ -3,24 +3,15 @@ import { useEffect} from 'react';
 import { useForm } from 'react-hook-form';
 import Input from "../../../shared/components/Input";
 import Button from "../../../shared/components/Button";
-import { createDoctor } from '../services/CreateDoctor';
+import { createDoctor } from '../services/DoctorsService';
 import { getAllSpecialties } from '../../../specialties/pages/services/SpecialtiesService';
 
 
 function NewDoctorForm({ onSuccess, onCancel }) {
-  //const navigate = useNavigate();
 
   const [errorMessage, setErrorMessage] = useState('');
   const [specialties, setSpecialties] = useState([]);
-  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState('');
-  //const [daysSchedule, setDaysSchedule] = useState(INITIAL_DAYS);
-  const [isUpdate, setIsUpdate] = useState(false);
   const [loadingSpecialities, setLoadingSpecialities] = useState(true);
-  const [loadingSchedule, setLoadingSchedule] = useState(false);
-  //const [isSubmitting, setIsSubmitting] = useState(false);
-  //const [successMessage, setSuccessMessage] = useState('');
-
-
 
   const {
     register,

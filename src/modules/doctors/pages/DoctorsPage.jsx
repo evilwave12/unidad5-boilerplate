@@ -1,61 +1,62 @@
-import { useState } from 'react';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import Modal from '../../shared/components/Modal';
 import NewDoctorForm from './components/NewDoctorForm';
 import AvailabilityPage from './AvailabilityPage';
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { getDoctors } from './services/DoctorsService';
 
 function DoctorsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  
+
   const navigate = useNavigate();
+
+  const [doctors, setDoctors] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [pageIndex, setPageIndex] = useState(1);
+  const pageSize = 10;
+  const [totalCount, setTotalCount] = useState(0);
+  //const [errorMessage, setErrorMessage] = useState('');
 
   const handleOpenCreateModal = () => {
     setIsCreateModalOpen(true);
   };
 
-  const doctorsList = [
-    {
-      id: 'MED-4920',
-      name: 'Dr. Alejandro Rivera',
-      specialty: 'Cardiología Clínica',
-      status: 'Active',
-      statusType: 'active',
-      avatar: '👨‍⚕️',
-    },
-    {
-      id: 'MED-2104',
-      name: 'Dra. Elena Martínez',
-      specialty: 'Pediatría Avanzada',
-      status: 'On Leave',
-      statusType: 'danger',
-      avatar: '👩‍⚕️',
-    },
-    {
-      id: 'MED-8831',
-      name: 'Dr. Marcos Torres',
-      specialty: 'Neurocirugía',
-      status: 'Active',
-      statusType: 'active',
-      avatar: '👨‍⚕️',
-    },
-    {
-      id: 'MED-1192',
-      name: 'Dra. Lucía Soria',
-      specialty: 'Ginecología',
-      status: 'Active',
-      statusType: 'active',
-      avatar: '👩‍⚕️',
-    },
-  ];
+  const handleDoctorCreated = () => {
+    setIsCreateModalOpen(false);
+    fetchDoctors();
+  };
 
-  const filteredDoctors = doctorsList.filter(
+  const fetchDoctors = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const result = await getDoctors(pageSize, pageIndex);
+      console.log('Estructura real de getDoctors:', result);
+
+      const items = Array.isArray(result)
+        ? result
+        : (result?.data ?? result?.items ?? []);
+
+      setDoctors(items);
+      setTotalCount(result?.total ?? result?.totalCount ?? items.length);
+    } catch (error) {
+      console.error('Error al cargar doctores:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pageIndex]);
+
+  useEffect(() => {
+    fetchDoctors();
+  }, [fetchDoctors]);
+
+  const filteredDoctors = doctors.filter(
     (doc) =>
       doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.id.toLowerCase().includes(searchTerm.toLowerCase())
+      doc.specialty.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -117,7 +118,6 @@ function DoctorsPage() {
               />
             </svg>
             <span>Agregar Disponibilidad Horaria</span>
-            
           </Button>
 
           <Button
@@ -152,7 +152,7 @@ function DoctorsPage() {
             <tbody className="divide-y divide-med-border-subtle">
               {filteredDoctors.map((doc) => (
                 <tr
-                  key={doc.id}
+                  key={doc.licenseNumber}
                   className="hover:bg-gray-50/70 transition-colors"
                 >
                   {/* Doctor Info */}
@@ -160,13 +160,11 @@ function DoctorsPage() {
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <div className="w-10 h-10 rounded-xl bg-med-primary-100 flex items-center justify-center text-xl">
-                          {doc.avatar}
+                          {doc.avatar ?? '👨‍⚕️'}
                         </div>
                         <span
                           className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-                            doc.statusType === 'active'
-                              ? 'bg-emerald-500'
-                              : 'bg-rose-500'
+                            doc.isActive ? 'bg-emerald-500' : 'bg-rose-500'
                           }`}
                         />
                       </div>
@@ -175,7 +173,7 @@ function DoctorsPage() {
                           {doc.name}
                         </p>
                         <p className="text-xs text-med-text-muted mt-0.5">
-                          ID: {doc.id}
+                          ID: {doc.licenseNumber}
                         </p>
                       </div>
                     </div>
@@ -184,23 +182,28 @@ function DoctorsPage() {
                   {/* Especialidad Badge en Píldora */}
                   <td className="px-6 py-4">
                     <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-med-primary-100 text-med-primary-700">
-                      {doc.specialty}
+                      {doc.specialty.name}
                     </span>
                   </td>
 
                   {/* Estado de Disponibilidad */}
                   <td className="px-6 py-4 text-center">
-                    {doc.statusType === 'active' ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-med-active-bg text-med-active-text">
-                        <span className="w-1.5 h-1.5 rounded-full bg-med-active-text" />
-                        Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-med-danger-bg text-med-danger-text">
-                        <span className="w-1.5 h-1.5 rounded-full bg-med-danger-text" />
-                        Inactivo
-                      </span>
-                    )}
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                        doc.isActive
+                          ? 'bg-med-active-bg text-med-active-text'
+                          : 'bg-med-danger-bg text-med-danger-text'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          doc.isActive
+                            ? 'bg-med-active-text'
+                            : 'bg-med-danger-text'
+                        }`}
+                      />
+                      {doc.isActive ? 'Activo' : 'Inactivo'}
+                    </span>
                   </td>
 
                   {/* Botones de Acciones (Ojo, Lápiz, Basurero) */}
@@ -283,7 +286,9 @@ function DoctorsPage() {
 
         {/* Paginador normalizado idéntico a Búsqueda y Filtrado de Citas */}
         <div className="p-4 bg-med-primary-50/50 border-t border-med-border flex items-center justify-between text-xs text-med-text-muted">
-          <span>Mostrando 4 de 124 registros</span>
+          <span>
+            Mostrando {filteredDoctors.length} de {totalCount} registros
+          </span>
           <div className="flex items-center gap-1">
             <button className="px-2.5 py-1 border border-med-border rounded bg-white text-med-text-sub hover:bg-gray-50">
               ‹
@@ -294,14 +299,14 @@ function DoctorsPage() {
           </div>
         </div>
       </Card>
-      
+
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         title="Nuevo Doctor"
       >
         <NewDoctorForm
-          onSuccess={() => setIsCreateModalOpen(false)}
+          onSuccess={handleDoctorCreated}
           onCancel={() => setIsCreateModalOpen(false)}
         />
       </Modal>
