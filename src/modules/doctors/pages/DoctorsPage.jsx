@@ -45,7 +45,7 @@ function DoctorsPage() {
   
         alert('El doctor fue eliminado correctamente.');
       } catch (error) {
-        if (error.response?.status === 409) {
+        if (error.response?.status === 400) {
           alert('El doctor se encuentra inactivo.');
         } else {
           alert('No se pudo eliminar el doctor, intentelo nuevamente.');
