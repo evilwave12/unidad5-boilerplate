@@ -1,45 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
+
+import { DoctorsService } from '../../doctors/pages/services/DoctorsService';
+import { SpecialtiesService } from '../../specialties/pages/services/SpecialtiesService';
+import {AvailabilityService} from '../../doctors/pages/services/AvailabilityService';
+
 import SpecialtyDoctorSelector from '../components/SpecialtyDoctorSelector';
 import DoctorInformation from '../components/DoctorInformation';
 import AvailabilitySelector from '../components/AvailabilitySelector';
 import SelectionBanner from '../components/SelectionBanner';
 
-const DOCTORS_LIST = [
-  {
-    id: 'doc-1',
-    name: 'Dr. Alejandro Martínez',
-    specialty: 'Cardiología',
-    specialtyDetail: 'Cardiología Intervencionista',
-    clinic: 'Clínica San Rafael • Sede Central Consultorio 402',
-    badge: 'Verificado',
-    avatar: '👨‍⚕️',
-  },
-  {
-    id: 'doc-2',
-    name: 'Dra. Elena Martínez',
-    specialty: 'Pediatría',
-    specialtyDetail: 'Pediatría Avanzada',
-    clinic: 'Clínica San Rafael • Consultorio 104',
-    badge: 'Verificado',
-    avatar: '👩‍⚕️',
-  },
-  {
-    id: 'doc-3',
-    name: 'Dr. Marcos Torres',
-    specialty: 'Neurología',
-    specialtyDetail: 'Neurocirugía Clínica',
-    clinic: 'Clínica San Rafael • Consultorio 202',
-    badge: 'Verificado',
-    avatar: '👨‍⚕️',
-  },
-];
-
 const WEEK_DAYS = [
   { dayName: 'LUN', dateNumber: '22', fullDate: 'Lunes 22 de Mayo de 2024' },
   { dayName: 'MAR', dateNumber: '23', fullDate: 'Martes 23 de Mayo de 2024' },
-  { dayName: 'MIE', dateNumber: '24', fullDate: 'Miércoles 24 de Mayo de 2024' },
+  {
+    dayName: 'MIE',
+    dateNumber: '24',
+    fullDate: 'Miércoles 24 de Mayo de 2024',
+  },
   { dayName: 'JUE', dateNumber: '25', fullDate: 'Jueves 25 de Mayo de 2024' },
   { dayName: 'VIE', dateNumber: '26', fullDate: 'Viernes 26 de Mayo de 2024' },
 ];
@@ -55,32 +34,68 @@ const SLOTS_BY_DAY = {
 function PatientHome() {
   const navigate = useNavigate();
 
-  const [selectedSpecialty, setSelectedSpecialty] = useState('Cardiología');
-  const [selectedDoctorId, setSelectedDoctorId] = useState('doc-1');
+  const [specialties, setSpecialties] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState('Seleccione una especialidad');
+  const [selectedDoctorId, setSelectedDoctorId] = useState('Seleccione un doctor');
+
   const [selectedDayNumber, setSelectedDayNumber] = useState('22');
   const [selectedSlot, setSelectedSlot] = useState('09:30');
   const [confirmedModal, setConfirmedModal] = useState(false);
 
-  const filteredDoctors = DOCTORS_LIST.filter(
-    (doc) => doc.specialty === selectedSpecialty
+  useEffect(() => {
+    const fetchSelectorData = async () => {
+      try {
+        setLoading(true);
+        const [specialtiesData, doctorsData] = await Promise.all([
+          SpecialtiesService.getAllSpecialties(),
+          DoctorsService.getAllDoctors(),
+        ]);
+        setSpecialties(specialtiesData);
+        setDoctors(doctorsData);
+
+        if (specialtiesData.length > 0) {
+          const firstSpecialtyId = specialtiesData[0].id;
+          setSelectedSpecialtyId(firstSpecialtyId);
+
+          const firstMatch = doctorsData.find(
+            (doc) =>
+              doc.isActive && doc.specialty?.specialtyId === firstSpecialtyId
+          );
+          if (firstMatch) {
+            setSelectedDoctorId(firstMatch.id);
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando especialidades o doctores:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSelectorData();
+  }, []);
+
+  const filteredDoctors = doctors.filter(
+    (doc) => doc.isActive && doc.specialty?.specialtyId === selectedSpecialtyId
   );
 
   const currentDoctor =
-    DOCTORS_LIST.find((doc) => doc.id === selectedDoctorId) ||
+    filteredDoctors.find((doc) => doc.id === selectedDoctorId) ||
     filteredDoctors[0] ||
-    DOCTORS_LIST[0];
+    null;
 
   const selectedDayObj =
     WEEK_DAYS.find((d) => d.dateNumber === selectedDayNumber) || WEEK_DAYS[0];
 
-  const handleSpecialtyChange = (newSpecialty) => {
-    setSelectedSpecialty(newSpecialty);
-    const firstMatch = DOCTORS_LIST.find(
-      (doc) => doc.specialty === newSpecialty
+  const handleSpecialtyChange = (newSpecialtyId) => {
+    setSelectedSpecialtyId(newSpecialtyId);
+    const firstMatch = doctors.find(
+      (doc) => doc.isActive && doc.specialty?.specialtyId === newSpecialtyId
     );
-    if (firstMatch) {
-      setSelectedDoctorId(firstMatch.id);
-    }
+    setSelectedDoctorId(firstMatch ? firstMatch.id : '');
   };
 
   const handleSelectSlot = (dayNum, slot) => {
@@ -91,15 +106,17 @@ function PatientHome() {
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto">
       <SpecialtyDoctorSelector
-        selectedSpecialty={selectedSpecialty}
+        specialties={specialties}
+        selectedSpecialtyId={selectedSpecialtyId}
         onSpecialtyChange={handleSpecialtyChange}
-        doctors={filteredDoctors.length > 0 ? filteredDoctors : DOCTORS_LIST}
+        doctors={filteredDoctors}
         selectedDoctorId={selectedDoctorId}
         onDoctorChange={setSelectedDoctorId}
         onSearch={() => {}}
+        loading={loading}
       />
 
-      <DoctorInformation doctor={currentDoctor} />
+      <DoctorInformation doctor={currentDoctor} loading={loading} />
 
       <AvailabilitySelector
         weekDays={WEEK_DAYS}
@@ -113,11 +130,14 @@ function PatientHome() {
       <SelectionBanner
         selectedDayObj={selectedDayObj}
         selectedSlot={selectedSlot}
-        clinic={currentDoctor.clinic}
+        clinic={
+          currentDoctor?.clinic ||
+          'Clínica San Rafael • Sede Central Consultorio 402'
+        }
         onConfirm={() => setConfirmedModal(true)}
       />
 
-      {confirmedModal && (
+      {confirmedModal && currentDoctor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center animate-in fade-in zoom-in duration-150">
             <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
@@ -127,9 +147,9 @@ function PatientHome() {
               ¡Turno Confirmado con Éxito!
             </h3>
             <p className="text-xs text-med-text-sub mt-2 leading-relaxed">
-              Tu turno con el{' '}
+              Tu turno con{' '}
               <strong className="text-med-text-main">
-                {currentDoctor.name}
+                Dr/a. {currentDoctor.name}
               </strong>{' '}
               ha sido reservado para el{' '}
               <strong className="text-med-text-main">
@@ -140,10 +160,10 @@ function PatientHome() {
 
             <div className="mt-5 p-3.5 bg-med-primary-50 border border-med-primary-200/60 rounded-xl text-xs text-med-primary-900 text-left space-y-1">
               <p>
-                <strong>Especialidad:</strong> {currentDoctor.specialtyDetail}
+                <strong>Especialidad:</strong> {currentDoctor.specialty?.name}
               </p>
               <p>
-                <strong>Lugar:</strong> {currentDoctor.clinic}
+                <strong>Matrícula:</strong> {currentDoctor.licenseNumber}
               </p>
               <p>
                 <strong>Paciente:</strong> Johnathan Doe (DNI: 40.123.456)
