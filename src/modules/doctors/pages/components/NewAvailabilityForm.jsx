@@ -5,7 +5,7 @@ import {
   getDoctors,
   getDoctorAvailabilities,
   saveDoctorAvailabilities,
-} from '../services/AvailabilityService';
+} from '../services/DoctorsService';
 
 const INITIAL_DAYS = [
   {
@@ -57,12 +57,6 @@ const INITIAL_DAYS = [
     startTime: '08:00',
     endTime: '12:00',
   },
-];
-
-const INITIAL_DOCTORS = [
-  { id: 1, name: 'Dr. Juan Pérez', specialty: { name: 'Cardiología' } },
-  { id: 2, name: 'Dra. Ana Gómez', specialty: { name: 'Pediatría' } },
-  { id: 3, name: 'Dr. Carlos López', specialty: { name: 'Dermatología' } },
 ];
 
 // Normaliza tildes y mayúsculas para comparar días sin errores ("MIÉRCOLES" === "MIERCOLES")
@@ -211,7 +205,7 @@ function NewAvailabilityForm() {
     const payload = {
       doctorId: selectedDoctorId,
       days: activeDays.map((d) => ({
-        day: d.key,
+        dayOfTheWeek: d.key,
         startTime: d.startTime,
         endTime: d.endTime,
       })),

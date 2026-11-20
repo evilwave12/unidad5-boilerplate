@@ -1,5 +1,10 @@
 import { backInstance } from '../../../shared/api/axiosInstance';
 
+export const createDoctor = async (doctor) => {
+  const response = await backInstance.post('api/doctors', doctor);
+  return response.data;
+};
+
 export const getDoctors = async () => {
   const { data } = await backInstance.get('/api/doctors');
   // Soporta tanto respuesta paginada { data: [...], total } como array directo

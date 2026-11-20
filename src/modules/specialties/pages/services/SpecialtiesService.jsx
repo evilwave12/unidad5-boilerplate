@@ -18,8 +18,16 @@ export const deleteSpecialty = async(id) => {
   await backInstance.delete('api/specialties/'+id)
 }
 
+export const getAllSpecialties = async () => {
+  const { data } = await backInstance.get('/api/specialties');
+  // Soporta tanto respuesta paginada { data: [...], total } como array directo
+  return Array.isArray(data) ? data : data.data || [];
+};
+
 export const SpecialtiesService = {
   getSpecialties,
   createSpecialty,
   deleteSpecialty,
+  getAllSpecialties,
 };
+
