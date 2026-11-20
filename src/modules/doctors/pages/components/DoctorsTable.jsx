@@ -66,7 +66,7 @@ function DoctorsTable({
                           {doc.name}
                         </p>
                         <p className="text-xs text-med-text-muted mt-0.5">
-                          ID: {doc.licenseNumber}
+                          LICENCIA: {doc.licenseNumber}
                         </p>
                       </div>
                     </div>
