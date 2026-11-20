@@ -29,8 +29,8 @@ function NewDoctorForm({ onSuccess, onCancel }) {
     formState: { errors, isSubmitting }, //noentiendo esto
   } = useForm({ //es necesario esto?
     defaultValues: {
-      fullName: '',
-      license: '',
+      name: '',
+      licenseNumber: '',
       specialtyId: '',
     },
   });
@@ -71,8 +71,8 @@ function NewDoctorForm({ onSuccess, onCancel }) {
       <Input
         label="Nombre completo del doctor"
         placeholder="Ej. Dr. Alejandro Martínez"
-        {...register('fullName', { required: 'El nombre es obligatorio' })}
-        error={errors.fullName?.message}
+        {...register('name', { required: 'El nombre es obligatorio' })}
+        error={errors.name?.message}
       />
 
       {/* Input.jsx solo renderiza <input>, así que el select va a mano */}
@@ -111,8 +111,8 @@ function NewDoctorForm({ onSuccess, onCancel }) {
       <Input
         label="Matrícula"
         placeholder="Ej. ID-45920-X"
-        {...register('license', { required: 'La matrícula es obligatoria' })}
-        error={errors.license?.message}
+        {...register('licenseNumber', { required: 'La matrícula es obligatoria' })}
+        error={errors.licenseNumber?.message}
       />
 
       {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
