@@ -2,7 +2,6 @@ import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import Modal from '../../shared/components/Modal';
 import NewDoctorForm from './components/NewDoctorForm';
-import AvailabilityPage from './AvailabilityPage';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { getDoctors } from './services/DoctorsService';
@@ -29,7 +28,7 @@ function DoctorsPage() {
     fetchDoctors();
   };
 
-  const fetchDoctors = useCallback(async () => {
+  /*const fetchDoctors = useCallback(async () => {
     try {
       setIsLoading(true);
       const result = await getDoctors(pageSize, pageIndex);
@@ -57,7 +56,32 @@ function DoctorsPage() {
       doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.specialty.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  );*/
+
+  const fetchDoctors = useCallback(async () => {
+      try {
+        setIsLoading(true);
+        const result = await getDoctors(
+          pageSize,
+          pageIndex,
+          searchTerm
+        );
+        /*const items = result.items ?? result.data ?? result ?? [];*/
+        setDoctors(result.data ?? []);
+        setTotalCount(result.total ?? 0);
+      } catch (error) {
+        console.error('Error al cargar doctores:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, [pageIndex, searchTerm]);
+
+    useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchDoctors();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [fetchDoctors]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -94,7 +118,10 @@ function DoctorsPage() {
               type="text"
               placeholder="Buscar doctor por nombre..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPageIndex(1); //volver siempre a la página 1
+              }}
               className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-med-border rounded-lg text-med-text-main placeholder-med-text-muted focus:outline-none focus:ring-1 focus:ring-med-primary-600"
             />
           </div>
@@ -150,7 +177,7 @@ function DoctorsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-med-border-subtle">
-              {filteredDoctors.map((doc) => (
+              {doctors.map((doc) => (
                 <tr
                   key={doc.licenseNumber}
                   className="hover:bg-gray-50/70 transition-colors"
@@ -287,7 +314,7 @@ function DoctorsPage() {
         {/* Paginador normalizado idéntico a Búsqueda y Filtrado de Citas */}
         <div className="p-4 bg-med-primary-50/50 border-t border-med-border flex items-center justify-between text-xs text-med-text-muted">
           <span>
-            Mostrando {filteredDoctors.length} de {totalCount} registros
+            Mostrando {doctors.length} de {totalCount} registros
           </span>
           <div className="flex items-center gap-1">
             <button className="px-2.5 py-1 border border-med-border rounded bg-white text-med-text-sub hover:bg-gray-50">

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../../shared/components/Button';
 import {
-  getDoctors,
+  getAllDoctors,
   getDoctorAvailabilities,
   saveDoctorAvailabilities,
 } from '../services/DoctorsService';
@@ -86,7 +86,7 @@ function NewAvailabilityForm() {
     const fetchDoctors = async () => {
       try {
         setLoadingDoctors(true);
-        const list = await getDoctors();
+        const list = await getAllDoctors();
         setDoctors(list);
         if (list.length > 0) {
           setSelectedDoctorId(list[0].id);

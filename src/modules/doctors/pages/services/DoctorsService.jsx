@@ -5,10 +5,19 @@ export const createDoctor = async (doctor) => {
   return response.data;
 };
 
-export const getDoctors = async () => {
+export const getAllDoctors = async () => {
   const { data } = await backInstance.get('/api/doctors');
   // Soporta tanto respuesta paginada { data: [...], total } como array directo
   return Array.isArray(data) ? data : data.data || [];
+};
+
+export const getDoctors = async (pageSize, pageIndex, name='') => {
+  const params = {pageSize, pageIndex};
+  if(name.trim().length >= 3){
+    params.name = name.trim();
+  }
+  const response = await backInstance.get('api/doctors',{ params });
+  return response.data;
 };
 
 export const getDoctorAvailabilities = async (doctorId) => {
