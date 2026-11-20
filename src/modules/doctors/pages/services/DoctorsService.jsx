@@ -37,3 +37,12 @@ export const saveDoctorAvailabilities = async (payload, isUpdate) => {
 export const deleteDoctor = async(id) => {
   await backInstance.delete('api/doctors/'+id)
 }
+
+export const DoctorsService = {
+  createDoctor,
+  getAllDoctors,
+  getDoctors,
+  getDoctorAvailabilities,
+  saveDoctorAvailabilities,
+  deleteDoctor,
+};
