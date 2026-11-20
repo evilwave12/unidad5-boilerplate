@@ -13,7 +13,9 @@ function OverviewPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [pageIndex, setPageIndex] = useState(1);
     const pageSize = 10;
-    const [totalCount, setTotalCount] = useState(0);
+    const [totalCountDoctors, setTotalCountDoctors] = useState(0);
+    const [totalCountSpecialties, setTotalCountSpecialties] = useState(0);
+    const [totalCountAppointments, setTotalCountAppointments] = useState(0);
 
     const fetchDoctors = useCallback(async () => {
           try {
@@ -25,7 +27,7 @@ function OverviewPage() {
             );
             /*const items = result.items ?? result.data ?? result ?? [];*/
             setDoctors(result.data ?? []);
-            setTotalCount(result.total ?? 0);
+            setTotalCountDoctors(result.total ?? 0);
           } catch (error) {
             console.error('Error al cargar doctores:', error);
           } finally {
@@ -39,6 +41,12 @@ function OverviewPage() {
         }, 300);
         return () => clearTimeout(timer);
       }, [fetchDoctors]);
+
+      // handler del buscador
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setPageIndex(1);
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -103,7 +111,7 @@ function OverviewPage() {
               Doctores Activos
             </span>
             <p className="text-3xl sm:text-4xl font-extrabold text-med-primary-900 mt-1">
-              124
+              {totalCountDoctors}
             </p>
           </div>
         </Card>
@@ -136,7 +144,7 @@ function OverviewPage() {
               Especialidades Activas
             </span>
             <p className="text-3xl sm:text-4xl font-extrabold text-med-primary-900 mt-1">
-              32
+              {totalCountSpecialties}
             </p>
           </div>
         </Card>
@@ -169,7 +177,7 @@ function OverviewPage() {
               Turnos Confirmados Para Hoy
             </span>
             <p className="text-3xl sm:text-4xl font-extrabold text-med-primary-900 mt-1">
-              48
+              {totalCountAppointments}
             </p>
           </div>
         </Card>
@@ -181,11 +189,13 @@ function OverviewPage() {
       <DashboardTable
         doctors={doctors}
         isLoading={isLoading}
-        totalCount={totalCount}
+        totalCountDoctors={totalCountDoctors}
         pageIndex={pageIndex}
         pageSize={pageSize}
         onPageChange={setPageIndex}
         onDetail={() => navigate('/admin/doctors')}
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
       />
       </Card>
     </div>

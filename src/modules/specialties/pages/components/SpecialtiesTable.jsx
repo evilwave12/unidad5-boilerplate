@@ -149,6 +149,7 @@ function SpecialtiesTable({
           >
             ‹
           </button>
+          {pageIndex}
           <button
             disabled={pageIndex * pageSize >= totalCount}
             onClick={() => onPageChange(pageIndex + 1)}

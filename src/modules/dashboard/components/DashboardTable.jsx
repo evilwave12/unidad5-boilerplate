@@ -1,13 +1,15 @@
-import Button from '../../shared/components/Button';
+import { useState } from 'react';
 
 function DashboardTable({
   doctors,
   isLoading,
-  totalCount,
+  totalCountDoctors,
   pageIndex,
   pageSize,
   onPageChange,
   onDetail,
+  searchTerm,
+  onSearchChange
 }) {
   return (
     <div>
@@ -34,6 +36,8 @@ function DashboardTable({
             <input
               type="text"
               placeholder="Buscar por nombre..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 text-xs bg-med-primary-50/70 border border-med-border rounded-lg text-med-text-main placeholder-med-text-muted focus:outline-none focus:ring-1 focus:ring-med-primary-600"
             />
           </div>
@@ -140,7 +144,7 @@ function DashboardTable({
       {/* Paginador normalizado idéntico a Búsqueda y Filtrado de Citas */}
       <div className="p-4 bg-med-primary-50/50 border-t border-med-border flex items-center justify-between text-xs text-med-text-muted">
         <span>
-          Mostrando {doctors.length} de {totalCount} registros
+          Mostrando {doctors.length} de {totalCountDoctors} registros
         </span>
         <div className="flex items-center gap-1">
           <button
@@ -150,8 +154,9 @@ function DashboardTable({
           >
             ‹
           </button>
+          {pageIndex}
           <button
-            disabled={pageIndex * pageSize >= totalCount}
+            disabled={pageIndex * pageSize >= totalCountDoctors}
             onClick={() => onPageChange(pageIndex + 1)}
             className="px-2.5 py-1 border border-med-border rounded bg-white text-med-text-sub hover:bg-gray-50 disabled:opacity-50"
           >
