@@ -1,4 +1,4 @@
-import Card from '../../../shared/components/Card';
+import Card from '../../shared/components/Card';
 
 const STATUS_CONFIG = {
   Booked: {

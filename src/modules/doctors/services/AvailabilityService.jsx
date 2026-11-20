@@ -1,4 +1,4 @@
-import { backInstance } from '../../../shared/api/axiosInstance';
+import { backInstance } from '../../shared/api/axiosInstance';
 
 export const getAvailabilitySlots = async (doctor) => {
   const { data } = await backInstance.get(

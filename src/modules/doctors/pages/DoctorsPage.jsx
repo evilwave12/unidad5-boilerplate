@@ -1,11 +1,11 @@
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import Modal from '../../shared/components/Modal';
-import NewDoctorForm from './components/NewDoctorForm';
-import DoctorsTable from './components/DoctorsTable';
+import NewDoctorForm from '../components/NewDoctorForm';
+import DoctorsTable from '../components/DoctorsTable';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
-import { getDoctors, deleteDoctor } from './services/DoctorsService';
+import { getDoctors, deleteDoctor } from '../services/DoctorsService';
 
 function DoctorsPage() {
   const [searchTerm, setSearchTerm] = useState('');

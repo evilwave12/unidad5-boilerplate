@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useEffect} from 'react';
 import { useForm } from 'react-hook-form';
-import Input from "../../../shared/components/Input";
-import Button from "../../../shared/components/Button";
+import Input from "../../shared/components/Input";
+import Button from "../../shared/components/Button";
 import { createDoctor } from '../services/DoctorsService';
-import { getAllSpecialties } from '../../../specialties/pages/services/SpecialtiesService';
+import { getAllSpecialties } from '../../specialties/services/SpecialtiesService';
 
 
 function NewDoctorForm({ onSuccess, onCancel }) {
