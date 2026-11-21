@@ -1,6 +1,6 @@
 import { backInstance } from '../../shared/api/axiosInstance';
 
-//disponibilidades del doc
+// Disponibilidades del doctor
 export const getDoctorAvailabilities = async (doctorId) => {
   const { data } = await backInstance.get(
     `/api/doctors/${doctorId}/availabilities`
@@ -8,7 +8,7 @@ export const getDoctorAvailabilities = async (doctorId) => {
   return Array.isArray(data) ? data : (data.items ?? data.data ?? []);
 };
 
-//slots disponibles para un availabilityId puntual
+// Slots disponibles para un availabilityId puntual
 export const getAvailabilitySlots = async (availabilityId) => {
   const { data } = await backInstance.get(
     `/api/availabilities/${availabilityId}/availabilitySlots`
@@ -16,17 +16,28 @@ export const getAvailabilitySlots = async (availabilityId) => {
   return Array.isArray(data) ? data : (data.items ?? data.data ?? []);
 };
 
-//mezcla los dos de arriba jiji
+// Combina disponibilidades y sus slots sin que un 404 puntual rompa toda la carga
 export const getSlotsByDoctor = async (doctorId) => {
   const availabilities = await getDoctorAvailabilities(doctorId);
-
-  if (!availabilities.length) return [];
-
-  const slotsArrays = await Promise.all(
-    availabilities.map((av) => getAvailabilitySlots(av.id))
+  const activeAvailabilities = availabilities.filter(
+    (av) => av.isActive !== false
   );
 
-  return slotsArrays.flat();
+  if (!activeAvailabilities.length) return [];
+
+  const results = await Promise.allSettled(
+    activeAvailabilities.map(async (av) => {
+      const slots = await getAvailabilitySlots(av.id);
+      return slots.map((slot) => ({
+        ...slot,
+        _availability: av,
+      }));
+    })
+  );
+
+  return results
+    .filter((res) => res.status === 'fulfilled')
+    .flatMap((res) => res.value);
 };
 
 export const AvailabilityService = {

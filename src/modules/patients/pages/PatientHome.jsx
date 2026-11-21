@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 
-import { DoctorsService } from '../../doctors/services/DoctorsService';
 import { SpecialtiesService } from '../../specialties/services/SpecialtiesService';
 import { AvailabilityService } from '../../doctors/services/AvailabilityService';
 
@@ -36,6 +35,32 @@ const MONTH_NAMES = [
   'Diciembre',
 ];
 
+const DAY_OF_WEEK_MAP = {
+  0: 0,
+  sunday: 0,
+  domingo: 0,
+  1: 1,
+  monday: 1,
+  lunes: 1,
+  2: 2,
+  tuesday: 2,
+  martes: 2,
+  3: 3,
+  wednesday: 3,
+  miercoles: 3,
+  miércoles: 3,
+  4: 4,
+  thursday: 4,
+  jueves: 4,
+  5: 5,
+  friday: 5,
+  viernes: 5,
+  6: 6,
+  saturday: 6,
+  sabado: 6,
+  sábado: 6,
+};
+
 const toDateKey = (dateObj) => {
   const year = dateObj.getFullYear();
   const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -45,7 +70,7 @@ const toDateKey = (dateObj) => {
 
 const getWeekDays = (weekOffset = 0) => {
   const today = new Date();
-  const dayOfWeek = today.getDay(); // 0 = Dom, 1 = Lun, ..., 6 = Sab
+  const dayOfWeek = today.getDay();
 
   const sunday = new Date(today);
   sunday.setHours(0, 0, 0, 0);
@@ -70,6 +95,75 @@ const getWeekDays = (weekOffset = 0) => {
   });
 };
 
+const extractTime = (rawTime) => {
+  if (!rawTime) return '';
+  const str = String(rawTime);
+  if (str.includes('T')) {
+    return str.split('T')[1].slice(0, 5);
+  }
+  return str.slice(0, 5);
+};
+
+const resolveDateKey = (slot, referenceWeekDays) => {
+  const av = slot._availability || {};
+  const startStr = String(slot.startTime || '');
+
+  const rawDate =
+    slot.date ??
+    slot.day ??
+    slot.slotDate ??
+    slot.startDate ??
+    (startStr.includes('T') ? startStr : null) ??
+    av.date ??
+    av.day;
+
+  if (rawDate) {
+    const str = String(rawDate).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+      return str.slice(0, 10);
+    }
+    const parsed = new Date(str);
+    if (!Number.isNaN(parsed.getTime())) {
+      return toDateKey(parsed);
+    }
+  }
+
+  // Fallback si la disponibilidad usa dayOfWeek (0-6 o nombre del día) sin fecha puntual
+  const rawDayOfWeek = slot.dayOfWeek ?? av.dayOfWeek;
+  if (rawDayOfWeek !== undefined && rawDayOfWeek !== null) {
+    const normalizedKey =
+      typeof rawDayOfWeek === 'number'
+        ? rawDayOfWeek
+        : String(rawDayOfWeek).trim().toLowerCase();
+    const dayIndex = DAY_OF_WEEK_MAP[normalizedKey];
+    if (dayIndex !== undefined && referenceWeekDays[dayIndex]) {
+      return referenceWeekDays[dayIndex].dateKey;
+    }
+  }
+
+  return '';
+};
+
+const getWeekOffsetForDateKey = (dateKey) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return 0;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const currentSunday = new Date(today);
+  currentSunday.setDate(today.getDate() - today.getDay());
+
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const targetDate = new Date(year, month - 1, day);
+  const targetSunday = new Date(targetDate);
+  targetSunday.setDate(targetDate.getDate() - targetDate.getDay());
+
+  const diffWeeks = Math.round(
+    (targetSunday.getTime() - currentSunday.getTime()) /
+      (7 * 24 * 60 * 60 * 1000)
+  );
+  return Math.max(0, diffWeeks);
+};
+
 const buildSlotsByDay = (weekDays, rawSlots) => {
   const grouped = {};
   weekDays.forEach((day) => {
@@ -80,11 +174,13 @@ const buildSlotsByDay = (weekDays, rawSlots) => {
   return grouped;
 };
 
+const getActiveDoctors = (specialty) =>
+  (specialty?.doctors ?? []).filter((doc) => doc.isActive !== false);
+
 function PatientHome() {
   const navigate = useNavigate();
 
   const [specialties, setSpecialties] = useState([]);
-  const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState('');
@@ -100,39 +196,31 @@ function PatientHome() {
 
   const weekDays = getWeekDays(weekOffset);
 
-  const firstDay = weekDays[0]; // Domingo
-  const lastDay = weekDays[6]; // Sábado
+  const firstDay = weekDays[0];
+  const lastDay = weekDays[6];
   const weekRangeLabel =
     firstDay.monthName === lastDay.monthName
       ? `Domingo ${Number(firstDay.dateNumber)} - Sábado ${Number(lastDay.dateNumber)}, ${firstDay.monthName}`
       : `Domingo ${Number(firstDay.dateNumber)} ${firstDay.monthShort} - Sábado ${Number(lastDay.dateNumber)} ${lastDay.monthShort}`;
 
-  // 1. Carga inicial de especialidades y doctores
+  // 1. Carga inicial usando ResponseWithDoctors (api/specialties/withDoctors)
   useEffect(() => {
     const fetchSelectorData = async () => {
       try {
         setLoading(true);
-        const [specialtiesData, doctorsData] = await Promise.all([
-          SpecialtiesService.getAllSpecialties(),
-          DoctorsService.getAllDoctors(),
-        ]);
+        const specialtiesData =
+          await SpecialtiesService.getSpecialtiesWithDoctors();
         setSpecialties(specialtiesData);
-        setDoctors(doctorsData);
 
         if (specialtiesData.length > 0) {
-          const firstSpecialtyId = specialtiesData[0].id;
-          setSelectedSpecialtyId(firstSpecialtyId);
+          const firstSpecialty = specialtiesData[0];
+          setSelectedSpecialtyId(firstSpecialty.id);
 
-          const firstMatch = doctorsData.find(
-            (doc) =>
-              doc.isActive && doc.specialty?.specialtyId === firstSpecialtyId
-          );
-          if (firstMatch) {
-            setSelectedDoctorId(firstMatch.id);
-          }
+          const activeDocs = getActiveDoctors(firstSpecialty);
+          setSelectedDoctorId(activeDocs[0]?.id ?? '');
         }
       } catch (error) {
-        console.error('Error cargando especialidades o doctores:', error);
+        console.error('Error cargando especialidades con doctores:', error);
       } finally {
         setLoading(false);
       }
@@ -141,14 +229,27 @@ function PatientHome() {
     fetchSelectorData();
   }, []);
 
-  const filteredDoctors = doctors.filter(
-    (doc) => doc.isActive && doc.specialty?.specialtyId === selectedSpecialtyId
-  );
+  // Especialidad y doctores derivados directamente del DTO ResponseWithDoctors
+  const currentSpecialty =
+    specialties.find((spec) => spec.id === selectedSpecialtyId) || null;
+
+  const filteredDoctors = getActiveDoctors(currentSpecialty);
 
   const currentDoctor =
     filteredDoctors.find((doc) => doc.id === selectedDoctorId) ||
     filteredDoctors[0] ||
     null;
+
+  // Asegura que doctor.specialty.name exista para DoctorInformation y el Modal
+  const doctorWithSpecialty = currentDoctor
+    ? {
+        ...currentDoctor,
+        specialty: currentDoctor.specialty ?? {
+          specialtyId: currentSpecialty?.id,
+          name: currentSpecialty?.name,
+        },
+      }
+    : null;
 
   const fetchDoctorSlots = async (doctorId) => {
     if (!doctorId) {
@@ -159,16 +260,39 @@ function PatientHome() {
     try {
       setLoadingSlots(true);
       const data = await AvailabilityService.getSlotsByDoctor(doctorId);
+      const baseWeekDays = getWeekDays(0);
 
-      // Mapea el DTO ResponseAvailabilitySlots(id, day, startTime, endTime)
-      const normalized = data.map((slot) => ({
-        id: slot.id,
-        dateKey: String(slot.day).slice(0, 10), // "YYYY-MM-DD"
-        time: String(slot.startTime).slice(0, 5), // "HH:mm"
-        endTime: String(slot.endTime).slice(0, 5),
-      }));
+      const normalized = data
+        .filter(
+          (slot) =>
+            slot.isAvailable !== false &&
+            slot.isBooked !== true &&
+            slot.isActive !== false
+        )
+        .map((slot, index) => ({
+          id: slot.id ?? `${slot.availabilityId || 'slot'}-${index}`,
+          availabilityId: slot.availabilityId ?? slot._availability?.id,
+          dateKey: resolveDateKey(slot, baseWeekDays),
+          time: extractTime(slot.startTime ?? slot.time),
+          endTime: extractTime(slot.endTime),
+        }))
+        .filter((slot) => slot.dateKey && slot.time);
 
       setRawSlots(normalized);
+
+      // Si no hay slots en la semana actual pero sí en semanas futuras, salta a esa semana
+      const currentWeekHasSlots = baseWeekDays.some((day) =>
+        normalized.some((s) => s.dateKey === day.dateKey)
+      );
+
+      if (!currentWeekHasSlots && normalized.length > 0) {
+        const sortedDateKeys = normalized
+          .map((s) => s.dateKey)
+          .sort((a, b) => a.localeCompare(b));
+        setWeekOffset(getWeekOffsetForDateKey(sortedDateKeys[0]));
+      } else {
+        setWeekOffset(0);
+      }
     } catch (error) {
       console.error('Error cargando slots de disponibilidad:', error);
       setRawSlots([]);
@@ -207,10 +331,11 @@ function PatientHome() {
 
   const handleSpecialtyChange = (newSpecialtyId) => {
     setSelectedSpecialtyId(newSpecialtyId);
-    const firstMatch = doctors.find(
-      (doc) => doc.isActive && doc.specialty?.specialtyId === newSpecialtyId
+    const chosenSpecialty = specialties.find(
+      (spec) => spec.id === newSpecialtyId
     );
-    setSelectedDoctorId(firstMatch ? firstMatch.id : '');
+    const activeDocs = getActiveDoctors(chosenSpecialty);
+    setSelectedDoctorId(activeDocs[0]?.id ?? '');
   };
 
   const handleSelectSlot = (dayKey, slotObj) => {
@@ -231,7 +356,7 @@ function PatientHome() {
         loading={loading}
       />
 
-      <DoctorInformation doctor={currentDoctor} loading={loading} />
+      <DoctorInformation doctor={doctorWithSpecialty} loading={loading} />
 
       <AvailabilitySelector
         weekDays={weekDays}
@@ -251,14 +376,14 @@ function PatientHome() {
         selectedDayObj={selectedDayObj}
         selectedSlot={selectedSlot}
         clinic={
-          currentDoctor?.clinic ||
+          doctorWithSpecialty?.clinic ||
           'Clínica San Rafael • Sede Central Consultorio 402'
         }
         onConfirm={() => setConfirmedModal(true)}
-        disabled={!selectedSlot || !currentDoctor}
+        disable={!selectedSlot || !doctorWithSpecialty}
       />
 
-      {confirmedModal && currentDoctor && selectedSlot && (
+      {confirmedModal && doctorWithSpecialty && selectedSlot && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center animate-in fade-in zoom-in duration-150">
             <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
@@ -270,7 +395,7 @@ function PatientHome() {
             <p className="text-xs text-med-text-sub mt-2 leading-relaxed">
               Tu turno con{' '}
               <strong className="text-med-text-main">
-                Dr/a. {currentDoctor.name}
+                Dr/a. {doctorWithSpecialty.name}
               </strong>{' '}
               ha sido reservado para el{' '}
               <strong className="text-med-text-main">
@@ -281,10 +406,11 @@ function PatientHome() {
 
             <div className="mt-5 p-3.5 bg-med-primary-50 border border-med-primary-200/60 rounded-xl text-xs text-med-primary-900 text-left space-y-1">
               <p>
-                <strong>Especialidad:</strong> {currentDoctor.specialty?.name}
+                <strong>Especialidad:</strong>{' '}
+                {doctorWithSpecialty.specialty?.name}
               </p>
               <p>
-                <strong>Matrícula:</strong> {currentDoctor.licenseNumber}
+                <strong>Matrícula:</strong> {doctorWithSpecialty.licenseNumber}
               </p>
               <p>
                 <strong>Paciente:</strong> Johnathan Doe (DNI: 40.123.456)
