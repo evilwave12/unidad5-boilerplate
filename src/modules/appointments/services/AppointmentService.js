@@ -21,11 +21,7 @@ export const getAppointmentsBySearch = async ({
 
   const items = data.items ?? data.data ?? (Array.isArray(data) ? data : []);
   const totalCount =
-  data.totalCount ??
-  data.total ??
-  data.totalItems ??
-  data.totalRecords ??
-  items.length;
+    data.totalCount ?? data.totalItems ?? data.totalRecords ?? items.length;
 
   return { items, totalCount };
 };
@@ -40,10 +36,35 @@ export const getDoctors = async () => {
   return Array.isArray(data) ? data : (data.items ?? data.data ?? []);
 };
 
+export const createAppointment = async (appointmentPayload) => {
+  const { data } = await backInstance.post(
+    '/api/appointments',
+    appointmentPayload
+  );
+  return data;
+};
+
+export const getPatientAppointments = async (dni) => {
+  const { data } = await backInstance.get('/api/appointments/patient', {
+    params: { dni },
+  });
+  return Array.isArray(data) ? data : (data.items ?? data.data ?? []);
+};
+
+export const cancelAppointment = async (appointmentId) => {
+  const { data } = await backInstance.delete(
+    `/api/appointments/${appointmentId}`
+  );
+  return data;
+};
+
 export const AppointmentService = {
   getSpecialties,
   getDoctors,
   getAppointmentsBySearch,
+  createAppointment,
+  getPatientAppointments,
+  cancelAppointment,
 };
 
 export default AppointmentService;
