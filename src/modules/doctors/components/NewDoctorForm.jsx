@@ -18,7 +18,7 @@ function NewDoctorForm({ onSuccess, onCancel }) {
     handleSubmit,
     setValue,
     formState: { errors, isSubmitting }, //noentiendo esto
-  } = useForm({ //es necesario esto?
+  } = useForm({
     defaultValues: {
       name: '',
       licenseNumber: '',
@@ -101,7 +101,7 @@ function NewDoctorForm({ onSuccess, onCancel }) {
 
       <Input
         label="Matrícula"
-        placeholder="Ej. ID-45920-X"
+        placeholder="Ej. MED-3186"
         {...register('licenseNumber', { required: 'La matrícula es obligatoria' })}
         error={errors.licenseNumber?.message}
       />

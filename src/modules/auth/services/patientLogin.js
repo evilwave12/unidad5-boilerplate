@@ -1,14 +1,14 @@
 import { backInstance } from '../../shared/api/axiosInstance';
 
 export const loginPatient = async (email, dni) => {
-  if (
+  /*if (
     (email === 'paciente' ||
       email === 'paciente@medportal.com' ||
       email === 'paciente@test.com') &&
     String(dni) === 'paciente123'
   ) {
     return { data: { token: 'mock-patient-token-67890', role: 'Paciente' }, error: null };
-  }
+  }*/
 
   /*const response = await backInstance.post('api/patient/auth/login', {
     username,
