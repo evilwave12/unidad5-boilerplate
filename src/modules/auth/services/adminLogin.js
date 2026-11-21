@@ -7,9 +7,8 @@ export const loginAdmin = async (email, password) => {
       password,
     });
     
-    // Suponiendo que el backend retorna { token, role } o directamente el token string //efectivamente retorna token y role, refactorizar este bloque
-    const token = data.token || data;
-    return { data: token, error: null };
+    //const token = data.token;
+    return { data: { token: data.token, role: data.role }, error: null };
   } catch (err) {
     return {
       data: null,

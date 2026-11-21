@@ -23,12 +23,17 @@ backInstance.interceptors.response.use(
     return config;
   },
   (error) => {
-    if (error.status === 401) {
-      if (window.location.pathname.includes('/admin/')) {
+    if (error.response?.status === 401) {
+      const isAdminRoute =
+        window.location.pathname.startsWith('/admin') &&
+        window.location.pathname !== '/admin/login';
+
+      if (isAdminRoute) {
         localStorage.clear();
-        window.location.href = '/login';
+        window.location.href = '/admin/login';
       } else {
         localStorage.removeItem('token');
+        localStorage.removeItem('role');
       }
     }
 
