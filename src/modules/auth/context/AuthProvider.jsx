@@ -57,7 +57,7 @@ function AuthProvider({ children }) {
   };*/
 
   const singinAdmin = async (email, password) => {
-    if ( //con esto nos logueamos cuando el back no está encendido
+    /*if ( //con esto nos logueamos cuando el back no está encendido
       (email === 'admin' ||
         email === 'admin@medportal.com' ||
         email === 'admin@test.com') &&
@@ -66,7 +66,7 @@ function AuthProvider({ children }) {
       setAuthSession('mock-admin-token-12345', 'Administrador');
 
       return { error: null };
-    }
+    }*/
 
     const { data, error } = await loginAdmin(email, password);
 
@@ -102,7 +102,6 @@ function AuthProvider({ children }) {
       value={{
         isAuthenticated,
         role,
-        //singin,
         dni,
         singinAdmin,
         singinPatient,
