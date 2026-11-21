@@ -14,13 +14,16 @@ function AuthProvider({ children }) {
 
   const [role, setRole] = useState(() => localStorage.getItem('role'));
 
+  const [dni,setDni] = useState(() => localStorage.getItem('dni'))
+
   const singout = () => {
     localStorage.clear();
     setIsAuthenticated(false);
     setRole(null);
+    setDni(null);
   };
 
-  const setAuthSession = (token, userRole) => {
+  const setAuthSession = (token, userRole, userDni=null) => {
     const normalizedRole = userRole?.toLowerCase() ?? null; //REVISAR
     localStorage.setItem('token', token);
     if (normalizedRole) {
@@ -28,9 +31,19 @@ function AuthProvider({ children }) {
     } else {
       localStorage.removeItem('role');
     }
+
+    if(userDni){
+      localStorage.setItem('dni',String(userDni));
+      setDni(String(userDni));
+    }else{
+      localStorage.removeItem('dni');
+      setDni(null);
+    }
+
     setIsAuthenticated(true);
     setRole(normalizedRole);
   };
+
 
   /*const singin = async (username, password) => {
     const { data, error } = await login(username, password);
@@ -69,18 +82,18 @@ function AuthProvider({ children }) {
       (username === 'paciente' ||
         username === 'paciente@medportal.com' ||
         username === 'paciente@test.com') &&
-      password === 'paciente123'
+      String(patientDni) === 'paciente123'
     ) {
-      setAuthSession('mock-patient-token-67890', 'Paciente');
+      setAuthSession('mock-patient-token-67890', 'Paciente','45666747');
 
       return { error: null };
     }
 
-    const { data, error } = await loginPatient(username, password);
+    const { data, error } = await loginPatient(username, patientDni);
 
     if (error) { return { error }; }
 
-    setAuthSession(data.token, data.role || 'Paciente');
+    setAuthSession(data.token, data.role || 'user',patientDni);
 
     return { error: null };
   };
@@ -91,6 +104,7 @@ function AuthProvider({ children }) {
         isAuthenticated,
         role,
         //singin,
+        dni,
         singinAdmin,
         singinPatient,
         singout,
