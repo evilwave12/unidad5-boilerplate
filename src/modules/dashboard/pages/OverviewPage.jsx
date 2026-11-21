@@ -6,7 +6,7 @@ import DashboardCards from '../components/DashboardCards';
 import { useState, useEffect, useCallback } from 'react';
 import { getDoctors } from '../../doctors/services/DoctorsService';
 import { getSpecialties } from '../../specialties/services/SpecialtiesService';
-//import { getAppointments } from '../../appointments/services/AppointmentService';
+import { getAppointmentsBySearch } from '../../appointments/services/AppointmentService';
 
 function OverviewPage() {
   const navigate = useNavigate();
@@ -17,6 +17,7 @@ function OverviewPage() {
   const [pageIndex, setPageIndex] = useState(1);
   const pageSize = 10;
   const [totalCountDoctors, setTotalCountDoctors] = useState(0);
+  const [totalDoctorsGlobal, setTotalDoctorsGlobal] = useState(0);
   const [totalCountSpecialties, setTotalCountSpecialties] = useState(0);
   const [totalCountAppointments, setTotalCountAppointments] = useState(0);
 
@@ -42,6 +43,18 @@ function OverviewPage() {
   }, [fetchDoctors]);
 
   useEffect(() => {
+    const fetchTotalDoctors = async () => {
+      try {
+        const result = await getDoctors(1, 1);
+        setTotalDoctorsGlobal(result?.total ?? result?.length ?? 0);
+      } catch (error) {
+        console.error('Error al cargar doctores:', error);
+      }
+    };
+    fetchTotalDoctors();
+  }, []);
+
+  useEffect(() => {
     const fetchSpecialties = async () => {
       try {
         const result = await getSpecialties(1, 1);
@@ -52,6 +65,21 @@ function OverviewPage() {
     };
     fetchSpecialties();
   }, []);
+
+  useEffect(() => {
+  const fetchAppointments = async () => {
+    try {
+      const result = await getAppointmentsBySearch({
+        pageIndex: 1,
+        pageSize: 1,
+      });
+      setTotalCountAppointments(result?.totalCount ?? 0);
+    } catch (error) {
+      console.error('Error al cargar citas:', error);
+    }
+  };
+  fetchAppointments();
+}, []);
 
   // handler del buscador
   const handleSearchChange = (value) => {
@@ -93,7 +121,7 @@ function OverviewPage() {
       </div>
 
       <DashboardCards
-        totalCountDoctors={totalCountDoctors}
+        totalCountDoctors={totalDoctorsGlobal}
         totalCountSpecialties={totalCountSpecialties}
         totalCountAppointments={totalCountAppointments}
       />
