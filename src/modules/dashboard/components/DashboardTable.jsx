@@ -143,14 +143,14 @@ function DashboardTable({
 
       {/* Paginador normalizado idéntico a Búsqueda y Filtrado de Citas */}
       <div className="p-4 bg-med-primary-50/50 border-t border-med-border flex items-center justify-between text-xs text-med-text-muted">
-        <span>
+        <span className="text-sm">
           Mostrando {doctors.length} de {totalCountDoctors} registros
         </span>
         <div className="flex items-center gap-1">
           <button
             disabled={pageIndex <= 1}
             onClick={() => onPageChange(Math.max(pageIndex - 1, 1))}
-            className="px-2.5 py-1 border border-med-border rounded bg-white text-med-text-sub hover:bg-gray-50 disabled:opacity-50"
+            className="w-9 h-9 inline-flex items-center justify-center border border-med-border rounded-md bg-white text-med-text-sub text-3xl leading-none pb-0.5 hover:bg-gray-50 disabled:opacity-50"
           >
             ‹
           </button>
@@ -158,7 +158,7 @@ function DashboardTable({
           <button
             disabled={pageIndex * pageSize >= totalCountDoctors}
             onClick={() => onPageChange(pageIndex + 1)}
-            className="px-2.5 py-1 border border-med-border rounded bg-white text-med-text-sub hover:bg-gray-50 disabled:opacity-50"
+            className="w-9 h-9 inline-flex items-center justify-center border border-med-border rounded-md bg-white text-med-text-sub text-3xl leading-none pb-0.5 hover:bg-gray-50 disabled:opacity-50"
           >
             ›
           </button>

@@ -21,7 +21,11 @@ export const getAppointmentsBySearch = async ({
 
   const items = data.items ?? data.data ?? (Array.isArray(data) ? data : []);
   const totalCount =
-    data.totalCount ?? data.totalItems ?? data.totalRecords ?? items.length;
+  data.totalCount ??
+  data.total ??
+  data.totalItems ??
+  data.totalRecords ??
+  items.length;
 
   return { items, totalCount };
 };

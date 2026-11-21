@@ -57,7 +57,7 @@ function AppointmentsSearchPage() {
           pageSize: PAGE_SIZE,
         });
         setAppointments(result.items);
-        setTotalCountAppointments(result.totalCountAppointments);
+        setTotalCountAppointments(result.totalCount);
         // Actualizar la hora de la última búsqueda
         setLastUpdated(
           new Date().toLocaleTimeString('es-AR', {
@@ -69,7 +69,7 @@ function AppointmentsSearchPage() {
         console.error('Error al buscar citas:', err);
         setError('No se pudieron cargar los registros de citas.');
         setAppointments([]);
-        setTotalCount(0);
+        setTotalCountAppointments(0);
       } finally {
         setLoading(false);
       }
@@ -138,7 +138,7 @@ function AppointmentsSearchPage() {
         fallbackDate={appliedFilters.date}
         pageIndex={pageIndex}
         pageSize={PAGE_SIZE}
-        totalCount={totalCountAppointments}
+        totalCountAppointments={totalCountAppointments}
         onPageChange={setPageIndex}
         onSelectAppointment={handleSelectAppointment}
       />
