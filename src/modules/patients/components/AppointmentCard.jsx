@@ -3,14 +3,8 @@ import Button from '../../shared/components/Button';
 
 function AppointmentCard({ appointment, onCancel, cancelling = false }) {
   const id = appointment.appointmentId;
-  const start = String(appointment.startDateTime);
-  const end = String(appointment.endDateTime);
-
-  /*const handleCancel = () => {
-    if (onCancel) {
-      onCancel(appointment.id);
-    }
-  };*/
+  const start = String(appointment.startTime ?? '').slice(0, 5);
+  const end = String(appointment.endTime ?? '').slice(0, 5);
 
   return (
     <Card className="flex flex-col justify-between gap-4 p-6">
@@ -23,29 +17,29 @@ function AppointmentCard({ appointment, onCancel, cancelling = false }) {
             <span className="w-1.5 h-1.5 rounded-full bg-current" />
             Confirmado
           </span>
-
-          <h3 className="text-lg font-bold text-med-primary-900">
-            {appointment.doctorName}
-          </h3>
-
-          <p className="text-sm text-med-text-sub mt-2">
-            Horario:{''}
-            <strong className="text-med-text-main font-semibold">
-              {start}
-              {end ? '-' + { end } : ''}hs
-            </strong>
-          </p>
         </div>
-        <div className="flex gap-2 pt-3 border-t border-med-border">
-          <Button
-            variant="outline"
-            className="w-full text-xs"
-            disable={!id||cancelling}
-            onClick={() => onCancel(appointment)}
-          >
-            Cancelar Turno
-          </Button>
-        </div>
+
+        <h3 className="text-lg font-bold text-med-primary-900">
+          Dr/a. {appointment.doctorName}
+        </h3>
+
+        <p className="text-sm text-med-text-sub mt-2">
+          Horario:{' '}
+          <strong className="text-med-text-main font-semibold">
+            {start} - {end} hs
+          </strong>
+        </p>
+      </div>
+
+      <div className="flex gap-2 pt-3 border-t border-med-border">
+        <Button
+          variant="outline"
+          className="w-full text-xs"
+          disabled={!id || cancelling}
+          onClick={() => onCancel(appointment)}
+        >
+          {cancelling ? 'Cancelando...' : 'Cancelar Turno'}
+        </Button>
       </div>
     </Card>
   );

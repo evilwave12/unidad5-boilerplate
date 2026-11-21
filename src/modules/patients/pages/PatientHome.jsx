@@ -4,6 +4,8 @@ import Button from '../../shared/components/Button';
 
 import { SpecialtiesService } from '../../specialties/services/SpecialtiesService';
 import { AvailabilityService } from '../../doctors/services/AvailabilityService';
+import { AppointmentService } from '../../appointments/services/AppointmentService';
+import useAuth from '../../auth/hook/useAuth';
 
 import SpecialtyDoctorSelector from '../components/SpecialtyDoctorSelector';
 import DoctorInformation from '../components/DoctorInformation';
@@ -35,37 +37,11 @@ const MONTH_NAMES = [
   'Diciembre',
 ];
 
-const DAY_OF_WEEK_MAP = {
-  0: 0,
-  sunday: 0,
-  domingo: 0,
-  1: 1,
-  monday: 1,
-  lunes: 1,
-  2: 2,
-  tuesday: 2,
-  martes: 2,
-  3: 3,
-  wednesday: 3,
-  miercoles: 3,
-  miércoles: 3,
-  4: 4,
-  thursday: 4,
-  jueves: 4,
-  5: 5,
-  friday: 5,
-  viernes: 5,
-  6: 6,
-  saturday: 6,
-  sabado: 6,
-  sábado: 6,
-};
-
 const toDateKey = (dateObj) => {
   const year = dateObj.getFullYear();
   const month = String(dateObj.getMonth() + 1).padStart(2, '0');
   const day = String(dateObj.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return year + '-' + month + '-' + day;
 };
 
 const getWeekDays = (weekOffset = 0) => {
@@ -90,78 +66,25 @@ const getWeekDays = (weekOffset = 0) => {
       dateNumber: String(dayNum).padStart(2, '0'),
       monthShort: MONTH_NAMES[monthIndex].slice(0, 3).toUpperCase(),
       monthName: MONTH_NAMES[monthIndex],
-      fullDate: `${DAY_NAMES_FULL[index]} ${dayNum} de ${MONTH_NAMES[monthIndex]} de ${year}`,
+      fullDate:
+        DAY_NAMES_FULL[index] +
+        ' ' +
+        dayNum +
+        ' de ' +
+        MONTH_NAMES[monthIndex] +
+        ' de ' +
+        year,
     };
   });
 };
 
-const extractTime = (rawTime) => {
-  if (!rawTime) return '';
-  const str = String(rawTime);
-  if (str.includes('T')) {
-    return str.split('T')[1].slice(0, 5);
-  }
-  return str.slice(0, 5);
-};
-
-const resolveDateKey = (slot, referenceWeekDays) => {
-  const av = slot._availability || {};
-  const startStr = String(slot.startTime || '');
-
-  const rawDate =
-    slot.date ??
-    slot.day ??
-    slot.slotDate ??
-    slot.startDate ??
-    (startStr.includes('T') ? startStr : null) ??
-    av.date ??
-    av.day;
-
-  if (rawDate) {
-    const str = String(rawDate).trim();
-    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
-      return str.slice(0, 10);
-    }
-    const parsed = new Date(str);
-    if (!Number.isNaN(parsed.getTime())) {
-      return toDateKey(parsed);
-    }
-  }
-
-  // Fallback si la disponibilidad usa dayOfWeek (0-6 o nombre del día) sin fecha puntual
-  const rawDayOfWeek = slot.dayOfWeek ?? av.dayOfWeek;
-  if (rawDayOfWeek !== undefined && rawDayOfWeek !== null) {
-    const normalizedKey =
-      typeof rawDayOfWeek === 'number'
-        ? rawDayOfWeek
-        : String(rawDayOfWeek).trim().toLowerCase();
-    const dayIndex = DAY_OF_WEEK_MAP[normalizedKey];
-    if (dayIndex !== undefined && referenceWeekDays[dayIndex]) {
-      return referenceWeekDays[dayIndex].dateKey;
-    }
-  }
-
-  return '';
-};
-
 const getWeekOffsetForDateKey = (dateKey) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return 0;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const currentSunday = new Date(today);
-  currentSunday.setDate(today.getDate() - today.getDay());
-
-  const [year, month, day] = dateKey.split('-').map(Number);
-  const targetDate = new Date(year, month - 1, day);
-  const targetSunday = new Date(targetDate);
-  targetSunday.setDate(targetDate.getDate() - targetDate.getDay());
-
-  const diffWeeks = Math.round(
-    (targetSunday.getTime() - currentSunday.getTime()) /
-      (7 * 24 * 60 * 60 * 1000)
-  );
-  return Math.max(0, diffWeeks);
+  for (let offset = 0; offset < 52; offset++) {
+    if (getWeekDays(offset).some((day) => day.dateKey === dateKey)) {
+      return offset;
+    }
+  }
+  return 0;
 };
 
 const buildSlotsByDay = (weekDays, rawSlots) => {
@@ -179,6 +102,8 @@ const getActiveDoctors = (specialty) =>
 
 function PatientHome() {
   const navigate = useNavigate();
+  const auth = useAuth();
+  const dni = auth?.dni;
 
   const [specialties, setSpecialties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -192,7 +117,11 @@ function PatientHome() {
 
   const [selectedDayKey, setSelectedDayKey] = useState('');
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [confirmedModal, setConfirmedModal] = useState(false);
+
+  const [reason, setReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState('');
+  const [confirmedBooking, setConfirmedBooking] = useState(null);
 
   const weekDays = getWeekDays(weekOffset);
 
@@ -200,10 +129,22 @@ function PatientHome() {
   const lastDay = weekDays[6];
   const weekRangeLabel =
     firstDay.monthName === lastDay.monthName
-      ? `Domingo ${Number(firstDay.dateNumber)} - Sábado ${Number(lastDay.dateNumber)}, ${firstDay.monthName}`
-      : `Domingo ${Number(firstDay.dateNumber)} ${firstDay.monthShort} - Sábado ${Number(lastDay.dateNumber)} ${lastDay.monthShort}`;
+      ? 'Domingo ' +
+        Number(firstDay.dateNumber) +
+        ' - Sábado ' +
+        Number(lastDay.dateNumber) +
+        ', ' +
+        firstDay.monthName
+      : 'Domingo ' +
+        Number(firstDay.dateNumber) +
+        ' ' +
+        firstDay.monthShort +
+        ' - Sábado ' +
+        Number(lastDay.dateNumber) +
+        ' ' +
+        lastDay.monthShort;
 
-  // 1. Carga inicial usando ResponseWithDoctors (api/specialties/withDoctors)
+  // carga inicial usando ResponseWithDoctors (api/specialties/withDoctors)
   useEffect(() => {
     const fetchSelectorData = async () => {
       try {
@@ -229,7 +170,6 @@ function PatientHome() {
     fetchSelectorData();
   }, []);
 
-  // Especialidad y doctores derivados directamente del DTO ResponseWithDoctors
   const currentSpecialty =
     specialties.find((spec) => spec.id === selectedSpecialtyId) || null;
 
@@ -240,7 +180,6 @@ function PatientHome() {
     filteredDoctors[0] ||
     null;
 
-  // Asegura que doctor.specialty.name exista para DoctorInformation y el Modal
   const doctorWithSpecialty = currentDoctor
     ? {
         ...currentDoctor,
@@ -251,7 +190,7 @@ function PatientHome() {
       }
     : null;
 
-  const fetchDoctorSlots = async (doctorId) => {
+  const fetchDoctorSlots = async (doctorId, preserveWeek = false) => {
     if (!doctorId) {
       setRawSlots([]);
       return;
@@ -260,38 +199,32 @@ function PatientHome() {
     try {
       setLoadingSlots(true);
       const data = await AvailabilityService.getSlotsByDoctor(doctorId);
-      const baseWeekDays = getWeekDays(0);
 
       const normalized = data
-        .filter(
-          (slot) =>
-            slot.isAvailable !== false &&
-            slot.isBooked !== true &&
-            slot.isActive !== false
-        )
-        .map((slot, index) => ({
-          id: slot.id ?? `${slot.availabilityId || 'slot'}-${index}`,
-          availabilityId: slot.availabilityId ?? slot._availability?.id,
-          dateKey: resolveDateKey(slot, baseWeekDays),
-          time: extractTime(slot.startTime ?? slot.time),
-          endTime: extractTime(slot.endTime),
+        .map((slot) => ({
+          id: slot.id,
+          dateKey: String(slot.day ?? '').slice(0, 10),
+          time: String(slot.startTime ?? '').slice(0, 5),
+          endTime: String(slot.endTime ?? '').slice(0, 5),
         }))
         .filter((slot) => slot.dateKey && slot.time);
 
       setRawSlots(normalized);
 
-      // Si no hay slots en la semana actual pero sí en semanas futuras, salta a esa semana
-      const currentWeekHasSlots = baseWeekDays.some((day) =>
-        normalized.some((s) => s.dateKey === day.dateKey)
-      );
+      if (!preserveWeek) {
+        const baseWeekDays = getWeekDays(0);
+        const currentWeekHasSlots = baseWeekDays.some((day) =>
+          normalized.some((s) => s.dateKey === day.dateKey)
+        );
 
-      if (!currentWeekHasSlots && normalized.length > 0) {
-        const sortedDateKeys = normalized
-          .map((s) => s.dateKey)
-          .sort((a, b) => a.localeCompare(b));
-        setWeekOffset(getWeekOffsetForDateKey(sortedDateKeys[0]));
-      } else {
-        setWeekOffset(0);
+        if (!currentWeekHasSlots && normalized.length > 0) {
+          const sortedDates = normalized
+            .map((s) => s.dateKey)
+            .sort((a, b) => a.localeCompare(b));
+          setWeekOffset(getWeekOffsetForDateKey(sortedDates[0]));
+        } else {
+          setWeekOffset(0);
+        }
       }
     } catch (error) {
       console.error('Error cargando slots de disponibilidad:', error);
@@ -301,14 +234,15 @@ function PatientHome() {
     }
   };
 
-  // 2. Trae los slots reales cada vez que cambia el doctor seleccionado
+  // trae los slots reales cada vez que cambia el doctor seleccionado
   useEffect(() => {
-    fetchDoctorSlots(currentDoctor?.id);
+    setBookingError('');
+    fetchDoctorSlots(currentDoctor?.id, false);
   }, [currentDoctor?.id]);
 
   const slotsByDay = buildSlotsByDay(weekDays, rawSlots);
 
-  // 3. Selecciona automáticamente el primer turno disponible al cambiar de semana o recibir nuevos slots
+  // selecciona automáticamente el primer turno disponible al cambiar de semana o recibir nuevos slots
   useEffect(() => {
     const currentWeekDays = getWeekDays(weekOffset);
     const currentSlotsByDay = buildSlotsByDay(currentWeekDays, rawSlots);
@@ -339,8 +273,61 @@ function PatientHome() {
   };
 
   const handleSelectSlot = (dayKey, slotObj) => {
+    setBookingError('');
     setSelectedDayKey(dayKey);
     setSelectedSlot(slotObj);
+  };
+
+  const handleConfirmAppointment = async () => {
+    if (!selectedSlot || !doctorWithSpecialty || submitting) return;
+
+    if (!dni) {
+      setBookingError(
+        'No se encontró el DNI del paciente en la sesión actual. Iniciá sesión nuevamente.'
+      );
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setBookingError('');
+
+      const finalReason = reason.trim() || 'Consulta médica';
+
+      const appointmentPayload = {
+        doctorId: doctorWithSpecialty.id,
+        availabilitySlotId: selectedSlot.id,
+        patient: {
+          dni: String(dni),
+        },
+        reason: finalReason,
+      };
+
+      const created =
+        await AppointmentService.createAppointment(appointmentPayload);
+
+      setConfirmedBooking({
+        doctor: doctorWithSpecialty,
+        day: selectedDayObj,
+        slot: selectedSlot,
+        dni: String(dni),
+        reason: finalReason,
+        appointment: created,
+      });
+
+      setReason('');
+      await fetchDoctorSlots(doctorWithSpecialty.id, true);
+    } catch (error) {
+      console.error('Error al reservar el turno:', error);
+      const errorMsg =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        error.response?.data?.title ||
+        'No se pudo confirmar el turno. Verificá si el horario sigue disponible.';
+      setBookingError(errorMsg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -352,7 +339,7 @@ function PatientHome() {
         doctors={filteredDoctors}
         selectedDoctorId={selectedDoctorId}
         onDoctorChange={setSelectedDoctorId}
-        onSearch={() => fetchDoctorSlots(currentDoctor?.id)}
+        onSearch={() => fetchDoctorSlots(currentDoctor?.id, false)}
         loading={loading}
       />
 
@@ -372,6 +359,12 @@ function PatientHome() {
         loading={loadingSlots}
       />
 
+      {bookingError && (
+        <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+          {bookingError}
+        </div>
+      )}
+
       <SelectionBanner
         selectedDayObj={selectedDayObj}
         selectedSlot={selectedSlot}
@@ -379,11 +372,14 @@ function PatientHome() {
           doctorWithSpecialty?.clinic ||
           'Clínica San Rafael • Sede Central Consultorio 402'
         }
-        onConfirm={() => setConfirmedModal(true)}
-        disable={!selectedSlot || !doctorWithSpecialty}
+        reason={reason}
+        onReasonChange={setReason}
+        onConfirm={handleConfirmAppointment}
+        disabled={!selectedSlot || !doctorWithSpecialty}
+        loading={submitting}
       />
 
-      {confirmedModal && doctorWithSpecialty && selectedSlot && (
+      {confirmedBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center animate-in fade-in zoom-in duration-150">
             <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
@@ -395,11 +391,12 @@ function PatientHome() {
             <p className="text-xs text-med-text-sub mt-2 leading-relaxed">
               Tu turno con{' '}
               <strong className="text-med-text-main">
-                Dr/a. {doctorWithSpecialty.name}
+                Dr/a. {confirmedBooking.doctor.name}
               </strong>{' '}
               ha sido reservado para el{' '}
               <strong className="text-med-text-main">
-                {selectedDayObj.fullDate} a las {selectedSlot.time} hs
+                {confirmedBooking.day.fullDate} a las{' '}
+                {confirmedBooking.slot.time} hs
               </strong>
               .
             </p>
@@ -407,13 +404,17 @@ function PatientHome() {
             <div className="mt-5 p-3.5 bg-med-primary-50 border border-med-primary-200/60 rounded-xl text-xs text-med-primary-900 text-left space-y-1">
               <p>
                 <strong>Especialidad:</strong>{' '}
-                {doctorWithSpecialty.specialty?.name}
+                {confirmedBooking.doctor.specialty?.name}
               </p>
               <p>
-                <strong>Matrícula:</strong> {doctorWithSpecialty.licenseNumber}
+                <strong>Matrícula:</strong>{' '}
+                {confirmedBooking.doctor.licenseNumber}
               </p>
               <p>
-                <strong>Paciente:</strong> Johnathan Doe (DNI: 40.123.456)
+                <strong>Paciente (DNI):</strong> {confirmedBooking.dni}
+              </p>
+              <p>
+                <strong>Motivo:</strong> {confirmedBooking.reason}
               </p>
             </div>
 
@@ -427,7 +428,7 @@ function PatientHome() {
               <Button
                 variant="secondary"
                 className="w-full text-xs py-2.5"
-                onClick={() => setConfirmedModal(false)}
+                onClick={() => setConfirmedBooking(null)}
               >
                 Reservar Otro
               </Button>
