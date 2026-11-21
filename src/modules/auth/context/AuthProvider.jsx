@@ -78,7 +78,7 @@ function AuthProvider({ children }) {
   };
 
   const singinPatient = async (email, dni) => {
-    if (
+    /*if (
       (email === 'paciente' ||
         email === 'paciente@medportal.com' ||
         email === 'paciente@test.com') &&
@@ -87,10 +87,9 @@ function AuthProvider({ children }) {
       setAuthSession('mock-patient-token-67890', 'Paciente','45666747');
 
       return { error: null };
-    }
+    }*/
 
     const { data, error } = await loginPatient(email, dni);
-
     if (error) { return { error }; }
 
     setAuthSession(data.token, data.role || 'user', dni);

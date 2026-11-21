@@ -24,10 +24,21 @@ export const getAllSpecialties = async () => {
   return Array.isArray(data) ? data : data.data || [];
 };
 
+export const getSpecialtiesWithDoctors = async () => {
+  const {data} = await backInstance.get('api/specialties/withDoctors');
+  const list = Array.isArray(data) ? data : data.data ?? data.items ?? [];
+
+  return list.map((spec) => ({
+    ...spec,
+    doctors: Array.isArray(spec.doctors) ? spec.doctors : [],
+  }))
+};
+
 export const SpecialtiesService = {
   getSpecialties,
   createSpecialty,
   deleteSpecialty,
   getAllSpecialties,
+  getSpecialtiesWithDoctors,
 };
 

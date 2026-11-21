@@ -10,6 +10,7 @@ import { getDoctors, deleteDoctor } from '../services/DoctorsService';
 function DoctorsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [doctorToDelete, setDoctorToDelete] = useState(null);
 
   const navigate = useNavigate();
 
@@ -32,27 +33,24 @@ function DoctorsPage() {
   };
 
   // Handler de eliminar
-    const handleOpenDelete = async (doc) => {
+    const handleDoctorDelete = async (doc) => {
       try {
         await deleteDoctor(doc.id);
-  
-        //si el elemento era el unico en una pagina, retrocede.
         if (doctors.length === 1 && pageIndex > 1) {
           setPageIndex(pageIndex - 1);
         } else {
           await fetchDoctors();
         }
-  
-        alert('El doctor fue eliminado correctamente.');
+    
+        setDoctorToDelete(null); // cierra el modal
       } catch (error) {
         if (error.response?.status === 400) {
           alert('El doctor se encuentra inactivo.');
         } else {
-          alert('No se pudo eliminar el doctor, intentelo nuevamente.');
+          alert('No se pudo eliminar el doctor, inténtelo nuevamente.');
         }
       }
     };
-
   /*const fetchDoctors = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -190,9 +188,9 @@ function DoctorsPage() {
         pageIndex={pageIndex}
         pageSize={pageSize}
         onPageChange={setPageIndex}
-        onDelete={handleOpenDelete}
+        onDelete={(doc) => setDoctorToDelete(doc)} //"botón" de aviso para avisar que se quiere borrar un doctor
       />
-
+{/*Modal de creación de doctor*/}
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
@@ -202,6 +200,37 @@ function DoctorsPage() {
           onSuccess={handleDoctorCreated}
           onCancel={() => setIsCreateModalOpen(false)}
         />
+      </Modal>
+
+      {/*Modal de confirmación de borrado*/}
+      <Modal
+        isOpen={doctorToDelete !== null}
+        onClose={() => setDoctorToDelete(null)}
+        title="Confirmar Borrado"
+      >
+        <div className="flex flex-col gap-5">
+          <p className="text-sm text-med-text-sub">
+            ¿Estás seguro de que querés eliminar{' '}
+            <span className="font-semibold text-med-text-main">
+              {doctorToDelete?.name}
+            </span>
+            ?
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setDoctorToDelete(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => handleDoctorDelete(doctorToDelete)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Eliminar
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

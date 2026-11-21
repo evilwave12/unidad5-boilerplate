@@ -7,7 +7,6 @@ export const loginAdmin = async (email, password) => {
       password,
     });
     
-    //const token = data.token;
     return { data: { token: data.token, role: data.role }, error: null };
   } catch (err) {
     return {
