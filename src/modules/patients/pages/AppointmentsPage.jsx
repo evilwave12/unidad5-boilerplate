@@ -1,25 +1,62 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
+import AppointmentCard from '../components/AppointmentCard';
+import { AppointmentService } from '../../appointments/services/AppointmentService';
+
+const TEST_PATIENT_DNI = '40123456';
 
 function AppointmentsPage() {
-  const sampleAppointments = [
-    {
-      id: 1,
-      doctor: 'Dra. María González',
-      specialty: 'Cardiología',
-      date: '2026-10-28',
-      time: '10:30 hs',
-      status: 'Confirmado',
-    },
-    {
-      id: 2,
-      doctor: 'Dr. Lucas Fernández',
-      specialty: 'Traumatología',
-      date: '2026-11-05',
-      time: '15:00 hs',
-      status: 'Pendiente',
-    },
-  ];
+  const navigate = useNavigate();
+
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [cancellingId, setCancellingId] = useState(null);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const data = await AppointmentService.getPatientAppointments(
+          TEST_PATIENT_DNI
+        );
+        setAppointments(data);
+      } catch (err) {
+        console.error('Error al cargar los turnos del paciente:', err);
+        setError('No se pudieron cargar tus turnos médicos.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
+
+  const handleCancel = async (appointment) => {
+    const id = appointment.appointmentId;
+    if (!id) return;
+
+    const confirmed = window.confirm(
+      `¿Confirmás la cancelación del turno con ${appointment.doctorName}?`
+    );
+    if (!confirmed) return;
+
+    try {
+      setCancellingId(id);
+      await AppointmentService.cancelAppointment(id);
+      setAppointments((prev) =>
+        prev.filter((item) => item.appointmentId !== id)
+      );
+    } catch (err) {
+      console.error('Error al cancelar el turno:', err);
+      alert('No se pudo cancelar el turno.');
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -32,59 +69,35 @@ function AppointmentsPage() {
             Consulta y gestiona las citas médicas programadas.
           </p>
         </div>
-        <Button onClick={() => alert('Función de nuevo turno próximamente')}>
-          + Solicitar Nuevo Turno
-        </Button>
+
+        <Button onClick={() => navigate('/')}>+ Solicitar Nuevo Turno</Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {sampleAppointments.map((appt) => (
-          <Card
-            key={appt.id}
-            className="flex flex-col justify-between gap-4 p-6"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-med-primary-100 text-med-primary-700">
-                  {appt.specialty}
-                </span>
-                <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                    appt.status === 'Confirmado'
-                      ? 'bg-med-active-bg text-med-active-text'
-                      : 'bg-med-leave-bg text-med-leave-text'
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                  {appt.status}
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-med-primary-900">
-                {appt.doctor}
-              </h3>
-              <p className="text-sm text-med-text-sub mt-2">
-                Fecha:{' '}
-                <strong className="text-med-text-main font-semibold">
-                  {appt.date}
-                </strong>{' '}
-                a las{' '}
-                <strong className="text-med-text-main font-semibold">
-                  {appt.time}
-                </strong>
-              </p>
-            </div>
-            <div className="flex gap-2 pt-3 border-t border-med-border">
-              <Button
-                variant="outline"
-                className="w-full text-xs"
-                onClick={() => alert(`Cancelando turno ${appt.id}`)}
-              >
-                Cancelar Turno
-              </Button>
-            </div>
-          </Card>
-        ))}
-      </div>
+      {loading ? (
+        <Card className="p-8 text-center text-sm text-med-text-sub">
+          Cargando tus turnos médicos...
+        </Card>
+      ) : error ? (
+        <Card className="p-6 text-center text-sm text-red-600">{error}</Card>
+      ) : appointments.length === 0 ? (
+        <Card className="p-8 text-center flex flex-col items-center gap-3">
+          <p className="text-sm text-med-text-sub">
+            No tenés turnos médicos activos programados.
+          </p>
+          <Button onClick={() => navigate('/')}>Reservar un Turno</Button>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {appointments.map((appt) => (
+            <AppointmentCard
+              key={appt.appointmentId}
+              appointment={appt}
+              cancelling={cancellingId === appt.appointmentId}
+              onCancel={handleCancel}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
