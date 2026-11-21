@@ -72,11 +72,11 @@ function AppointmentsTable({
   fallbackDate,
   pageIndex,
   pageSize,
-  totalCount,
+  totalCountAppointments,
   onPageChange,
   onSelectAppointment,
 }) {
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const totalPages = Math.max(1, Math.ceil(totalCountAppointments / pageSize));
 
   return (
     <Card className="p-0 overflow-hidden border-med-border">
@@ -214,7 +214,7 @@ function AppointmentsTable({
       {/* Paginador inferior */}
       <div className="p-4 bg-med-primary-50/50 border-t border-med-border flex items-center justify-between text-xs text-med-text-muted">
         <span>
-          Mostrando {appointments.length} de {totalCount} registros (Página{' '}
+          Mostrando {appointments.length} de {totalCountAppointments} registros (Página{' '}
           {pageIndex} de {totalPages})
         </span>
         <div className="flex items-center gap-1">

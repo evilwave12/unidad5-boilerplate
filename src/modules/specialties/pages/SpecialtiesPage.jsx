@@ -9,7 +9,7 @@ function SpecialtiesPage() {
   const [specialties, setSpecialties] = useState([]);
 
   // Estados para búsqueda y paginación
-  const [totalCount, setTotalCount] = useState(0);
+  const [totalCountSpecialties, setTotalCountSpecialties] = useState(0);
   const [pageIndex, setPageIndex] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,7 +29,7 @@ function SpecialtiesPage() {
       );
       /*const items = result.items ?? result.data ?? result ?? [];*/
       setSpecialties(result.data ?? []);
-      setTotalCount(result.total ?? 0);
+      setTotalCountSpecialties(result.total ?? 0);
     } catch (error) {
       console.error('Error al cargar especialidades:', error);
     } finally {
@@ -140,7 +140,7 @@ function SpecialtiesPage() {
       <SpecialtiesTable
         specialties={specialties}
         isLoading={isLoading}
-        totalCount={totalCount}
+        totalCountSpecialties={totalCountSpecialties}
         pageIndex={pageIndex}
         pageSize={pageSize}
         onPageChange={setPageIndex}

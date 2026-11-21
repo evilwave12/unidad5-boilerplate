@@ -20,7 +20,7 @@ function AppointmentsSearchPage() {
   const [doctors, setDoctors] = useState([]);
 
   const [appointments, setAppointments] = useState([]);
-  const [totalCount, setTotalCount] = useState(0);
+  const [totalCountAppointments, setTotalCountAppointments] = useState(0);
   const [pageIndex, setPageIndex] = useState(1);
 
   const [loading, setLoading] = useState(false);
