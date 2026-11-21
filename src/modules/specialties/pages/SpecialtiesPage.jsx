@@ -13,6 +13,7 @@ function SpecialtiesPage() {
   const [pageIndex, setPageIndex] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [specialtyToDelete, setSpecialtyToDelete] = useState(null);
 
   // Estado para crear
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -157,6 +158,37 @@ function SpecialtiesPage() {
           onSuccess={handleCreatedSuccess}
           onCancel={() => setIsCreateModalOpen(false)}
         />
+      </Modal>
+
+      {/*Modal de confirmación de borrado*/}
+      <Modal
+        isOpen={specialtyToDelete !== null}
+        onClose={() => setSpecialtyToDelete(null)}
+        title="Confirmar Borrado"
+      >
+        <div className="flex flex-col gap-5">
+          <p className="text-sm text-med-text-sub">
+            ¿Estás seguro de que querés eliminar{' '}
+            <span className="font-semibold text-med-text-main">
+              {specialtyToDelete?.name}
+            </span>
+            ?
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setSpecialtyToDelete(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleOpenDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Eliminar
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
