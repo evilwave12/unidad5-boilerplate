@@ -27,9 +27,9 @@ function DashboardCards({
                 />
               </svg>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-med-active-bg text-med-active-text">
+            {/* <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-med-active-bg text-med-active-text">
               +4 este mes
-            </span>
+            </span> */}
           </div>
 
           <div className="mt-6">
@@ -60,9 +60,9 @@ function DashboardCards({
                 />
               </svg>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
+            {/* <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
               Estable
-            </span>
+            </span> */}
           </div>
 
           <div className="mt-6">
@@ -93,9 +93,9 @@ function DashboardCards({
                 />
               </svg>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-med-primary-100 text-med-primary-700">
+            {/* <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-med-primary-100 text-med-primary-700">
               Hoy
-            </span>
+            </span> */}
           </div>
 
           <div className="mt-6">
