@@ -5,7 +5,7 @@ const backInstance = axios.create({
   withCredentials: true,
 });
 
-const isTokenExpired = (token) => {
+const isTokenExpired = (token) => { //esto es de ia
   if (!token || token.startsWith('mock-')) return false;
   try {
     const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
@@ -17,7 +17,7 @@ const isTokenExpired = (token) => {
   }
 };
 
-const clearAndRedirect = () => {
+const clearAndRedirect = () => { //se usa mas abajo cuando se larga un error 401
   const { pathname } = window.location;
   if (pathname.startsWith('/admin')) {
     localStorage.clear();
