@@ -24,16 +24,20 @@ backInstance.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      const isAdminRoute =
-        window.location.pathname.startsWith('/admin') &&
-        window.location.pathname !== '/admin/login';
+      const { pathname } = window.location;
+      const isAdminPath = pathname.startsWith('/admin');
 
-      if (isAdminRoute) {
+      if (isAdminPath) {
         localStorage.clear();
-        window.location.href = '/admin/login';
+        if (pathname !== '/admin/login') {
+          window.location.href = '/admin/login';
+        }
       } else {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
+        if (pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
 

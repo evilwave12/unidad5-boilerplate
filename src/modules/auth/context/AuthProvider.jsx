@@ -50,7 +50,7 @@ function AuthProvider({ children }) {
         email === 'admin@test.com') &&
       password === 'admin123'
     ) {
-      setAuthSession('mock-admin-token-12345', 'admin');
+      setAuthSession('mock-admin-token-12345', 'Administrador');
 
       return { error: null };
     }
@@ -59,7 +59,7 @@ function AuthProvider({ children }) {
 
     if (error) { return { error }; }
 
-    setAuthSession(data.token, data.role || 'admin');
+    setAuthSession(data.token, data.role || 'Administrador');
 
     return { error: null };
   };
@@ -71,7 +71,7 @@ function AuthProvider({ children }) {
         username === 'paciente@test.com') &&
       password === 'paciente123'
     ) {
-      setAuthSession('mock-patient-token-67890', 'user');
+      setAuthSession('mock-patient-token-67890', 'Paciente');
 
       return { error: null };
     }
@@ -80,7 +80,7 @@ function AuthProvider({ children }) {
 
     if (error) { return { error }; }
 
-    setAuthSession(data.token, data.role || 'user');
+    setAuthSession(data.token, data.role || 'Paciente');
 
     return { error: null };
   };

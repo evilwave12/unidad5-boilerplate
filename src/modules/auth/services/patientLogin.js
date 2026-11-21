@@ -7,7 +7,7 @@ export const loginPatient = async (email, password) => {
       email === 'paciente@test.com') &&
     password === 'paciente123'
   ) {
-    return { data: { token: 'mock-patient-token-67890', role: 'user' }, error: null };
+    return { data: { token: 'mock-patient-token-67890', role: 'Paciente' }, error: null };
   }
 
   /*const response = await backInstance.post('api/patient/auth/login', {

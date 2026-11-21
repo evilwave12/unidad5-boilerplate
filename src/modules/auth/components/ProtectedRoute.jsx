@@ -2,8 +2,8 @@ import { Navigate } from 'react-router-dom';
 import useAuth from '../hook/useAuth';
 
 const ROLE_HOME = {
-  admin: '/admin/home',
-  user: '/',
+  administrador: '/admin/home',
+  paciente: '/',
 };
 
 function ProtectedRoute({ children, redirectTo = '/login', allowedRoles }) {
