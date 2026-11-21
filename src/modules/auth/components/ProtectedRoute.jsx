@@ -2,8 +2,8 @@ import { Navigate } from 'react-router-dom';
 import useAuth from '../hook/useAuth';
 
 const ROLE_HOME = {
-  administrador: '/admin/home',
-  paciente: '/',
+  Administrador: '/admin/home',
+  Paciente: '/',
 };
 
 function ProtectedRoute({ children, redirectTo = '/login', allowedRoles }) {
@@ -13,17 +13,13 @@ function ProtectedRoute({ children, redirectTo = '/login', allowedRoles }) {
     return <Navigate to={redirectTo} replace />;
   }
 
-  //entender este bloque
   if (allowedRoles && allowedRoles.length > 0) {
-    const normalizedRole = role?.toLowerCase();
-    const normalizedAllowed = allowedRoles.map((r) => r.toLowerCase());
-
-    if (!normalizedRole) {
+    if (!role) {
       return <Navigate to={redirectTo} replace />;
     }
 
-    if (!normalizedAllowed.includes(normalizedRole)) {
-      const fallback = ROLE_HOME[normalizedRole] || redirectTo;
+    if (!allowedRoles.includes(role)) {
+      const fallback = ROLE_HOME[role] || redirectTo;
       return <Navigate to={fallback} replace />;
     }
   }

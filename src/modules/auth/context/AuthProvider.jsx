@@ -23,25 +23,25 @@ function AuthProvider({ children }) {
     setDni(null);
   };
 
-  const setAuthSession = (token, userRole, userDni=null) => {
-    const normalizedRole = userRole?.toLowerCase() ?? null; //REVISAR
+  const setAuthSession = (token, userRole, userDni = null) => {
+    const roleValue = userRole ?? null;
     localStorage.setItem('token', token);
-    if (normalizedRole) {
-      localStorage.setItem('role', normalizedRole);
+    if (roleValue) {
+      localStorage.setItem('role', roleValue);
     } else {
       localStorage.removeItem('role');
     }
 
-    if(userDni){
-      localStorage.setItem('dni',String(userDni));
+    if (userDni) {
+      localStorage.setItem('dni', String(userDni));
       setDni(String(userDni));
-    }else{
+    } else {
       localStorage.removeItem('dni');
       setDni(null);
     }
 
     setIsAuthenticated(true);
-    setRole(normalizedRole);
+    setRole(roleValue);
   };
 
 
@@ -92,7 +92,7 @@ function AuthProvider({ children }) {
     const { data, error } = await loginPatient(email, dni);
     if (error) { return { error }; }
 
-    setAuthSession(data.token, data.role || 'user', dni);
+    setAuthSession(data.token, data.role || 'Paciente', dni);
 
     return { error: null };
   };
