@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 
-import { DoctorsService } from '../../doctors/services/DoctorsService';
+//import { DoctorsService } from '../../doctors/services/DoctorsService';
 import { SpecialtiesService } from '../../specialties/services/SpecialtiesService';
 //import {AvailabilityService} from '../../doctors/services/AvailabilityService';
 
@@ -31,6 +31,8 @@ const SLOTS_BY_DAY = {
   26: ['08:00', '08:30', '09:00', '14:00', '14:30'],
 };
 
+const getActiveDoctors = (specialty) => (specialty?.doctors ?? []).filter((doc) => doc.isActive !== false);
+
 function PatientHome() {
   const navigate = useNavigate();
 
@@ -49,24 +51,15 @@ function PatientHome() {
     const fetchSelectorData = async () => {
       try {
         setLoading(true);
-        const [specialtiesData, doctorsData] = await Promise.all([
-          SpecialtiesService.getAllSpecialties(),
-          DoctorsService.getAllDoctors(),
-        ]);
+        const specialtiesData = await SpecialtiesService.getSpecialtiesWithDoctors();
         setSpecialties(specialtiesData);
-        setDoctors(doctorsData);
 
         if (specialtiesData.length > 0) {
-          const firstSpecialtyId = specialtiesData[0].id;
-          setSelectedSpecialtyId(firstSpecialtyId);
+          const firstSpecialty = specialtiesData[0];
+          setSelectedSpecialtyId(firstSpecialty.id);
 
-          const firstMatch = doctorsData.find(
-            (doc) =>
-              doc.isActive && doc.specialty?.specialtyId === firstSpecialtyId
-          );
-          if (firstMatch) {
-            setSelectedDoctorId(firstMatch.id);
-          }
+          const activeDocs = getActiveDoctors(firstSpecialty);
+          setSelectedDoctorId(activeDocs[0]?.id ?? '');
         }
       } catch (error) {
         console.error('Error cargando especialidades o doctores:', error);
@@ -78,24 +71,23 @@ function PatientHome() {
     fetchSelectorData();
   }, []);
 
-  const filteredDoctors = doctors.filter(
-    (doc) => doc.isActive && doc.specialty?.specialtyId === selectedSpecialtyId
-  );
+  const currentSpecialty = specialties.find((spec) => spec.id === selectedSpecialtyId) || null;
+  const filteredDoctors = getActiveDoctors(currentSpecialty);
 
-  const currentDoctor =
-    filteredDoctors.find((doc) => doc.id === selectedDoctorId) ||
-    filteredDoctors[0] ||
-    null;
+  const currentDoctor = filteredDoctors.find((doc) => doc.id === selectedDoctorId) || filteredDoctors[0] || null;
 
+  const doctorWithSpecialty = currentDoctor ? {...currentDoctor,specialty:currentDoctor.specialty??
+    {specialtyId: currentSpecialty?.id,name:currentSpecialty?.name,},
+  }:null;
+  
   const selectedDayObj =
     WEEK_DAYS.find((d) => d.dateNumber === selectedDayNumber) || WEEK_DAYS[0];
 
   const handleSpecialtyChange = (newSpecialtyId) => {
     setSelectedSpecialtyId(newSpecialtyId);
-    const firstMatch = doctors.find(
-      (doc) => doc.isActive && doc.specialty?.specialtyId === newSpecialtyId
-    );
-    setSelectedDoctorId(firstMatch ? firstMatch.id : '');
+    const chosenSpecialty = specialties.find((spec) => spec.id === newSpecialtyId);
+    const activeDocs = getActiveDoctors(chosenSpecialty);
+    setSelectedDoctorId(activeDocs[0]?.id ?? '');
   };
 
   const handleSelectSlot = (dayNum, slot) => {
@@ -131,13 +123,13 @@ function PatientHome() {
         selectedDayObj={selectedDayObj}
         selectedSlot={selectedSlot}
         clinic={
-          currentDoctor?.clinic ||
+          doctorWithSpecialty?.clinic ||
           'Clínica San Rafael • Sede Central Consultorio 402'
         }
         onConfirm={() => setConfirmedModal(true)}
       />
 
-      {confirmedModal && currentDoctor && (
+      {confirmedModal && doctorWithSpecialty && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center animate-in fade-in zoom-in duration-150">
             <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
@@ -160,13 +152,13 @@ function PatientHome() {
 
             <div className="mt-5 p-3.5 bg-med-primary-50 border border-med-primary-200/60 rounded-xl text-xs text-med-primary-900 text-left space-y-1">
               <p>
-                <strong>Especialidad:</strong> {currentDoctor.specialty?.name}
+                <strong>Especialidad:</strong> {doctorWithSpecialty.specialty?.name}
               </p>
               <p>
-                <strong>Matrícula:</strong> {currentDoctor.licenseNumber}
+                <strong>Matrícula:</strong> {doctorWithSpecialty.licenseNumber}
               </p>
               <p>
-                <strong>Paciente:</strong> Johnathan Doe (DNI: 40.123.456)
+                <strong>Paciente:</strong> Johnathan Doe (DNI: 40.123.456) {/* ACA HAY QUE CAMBIAR ESTOS DATOS DE PACIENTE:P */}
               </p>
             </div>
 
