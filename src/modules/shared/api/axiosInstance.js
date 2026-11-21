@@ -5,7 +5,7 @@ const backInstance = axios.create({
   withCredentials: true,
 });
 
-const isTokenExpired = (token) => { //esto es de ia
+const isTokenExpired = (token) => {
   if (!token || token.startsWith('mock-')) return false;
   try {
     const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
@@ -19,12 +19,12 @@ const isTokenExpired = (token) => { //esto es de ia
 
 const clearAndRedirect = () => { //se usa mas abajo cuando se larga un error 401
   const { pathname } = window.location;
+  localStorage.removeItem('token');
+  localStorage.removeItem('role');
+
   if (pathname.startsWith('/admin')) {
-    localStorage.clear();
     if (pathname !== '/admin/login') window.location.href = '/admin/login';
   } else {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
     if (pathname !== '/login') window.location.href = '/login';
   }
 };
@@ -32,7 +32,7 @@ const clearAndRedirect = () => { //se usa mas abajo cuando se larga un error 401
 backInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    const isLogin = config.url?.includes('/login'); //no se q hace esto
+    const isLogin = config.url?.includes('/login');
 
     if (!isLogin && token) {
       if (isTokenExpired(token)) {
@@ -50,7 +50,8 @@ backInstance.interceptors.request.use(
 backInstance.interceptors.response.use(
   (config) => config,
   (error) => {
-    if (error.response?.status === 401) {
+    const isLogin = error.config?.url?.includes('/login');
+    if (error.response?.status === 401 && !isLogin) {
       clearAndRedirect();
     }
 
