@@ -77,23 +77,23 @@ function AuthProvider({ children }) {
     return { error: null };
   };
 
-  const singinPatient = async (username, password) => {
+  const singinPatient = async (email, dni) => {
     if (
-      (username === 'paciente' ||
-        username === 'paciente@medportal.com' ||
-        username === 'paciente@test.com') &&
-      String(patientDni) === 'paciente123'
+      (email === 'paciente' ||
+        email === 'paciente@medportal.com' ||
+        email === 'paciente@test.com') &&
+      String(dni) === 'paciente123'
     ) {
       setAuthSession('mock-patient-token-67890', 'Paciente','45666747');
 
       return { error: null };
     }
 
-    const { data, error } = await loginPatient(username, patientDni);
+    const { data, error } = await loginPatient(email, dni);
 
     if (error) { return { error }; }
 
-    setAuthSession(data.token, data.role || 'user',patientDni);
+    setAuthSession(data.token, data.role || 'user', dni);
 
     return { error: null };
   };
