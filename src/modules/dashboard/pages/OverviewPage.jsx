@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import DashboardTable from '../components/DashboardTable';
-import DashboardCards from '../components/DashboardTable';
+import DashboardCards from '../components/DashboardCards';
 import { useState, useEffect, useCallback } from 'react';
 import { getDoctors } from '../../doctors/services/DoctorsService';
 import { getSpecialties } from '../../specialties/services/SpecialtiesService';
@@ -91,6 +91,12 @@ function OverviewPage() {
           </Button>
         </div>
       </div>
+
+      <DashboardCards
+        totalCountDoctors={totalCountDoctors}
+        totalCountSpecialties={totalCountSpecialties}
+        totalCountAppointments={totalCountAppointments}
+      />
 
       {/* Directorio de Profesionales Médicos (Tabla Resumen) */}
       <Card className="p-0 overflow-hidden border-med-border">
