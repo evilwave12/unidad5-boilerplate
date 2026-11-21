@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../shared/components/Button';
 
-//import { DoctorsService } from '../../doctors/services/DoctorsService';
+import { DoctorsService } from '../../doctors/services/DoctorsService';
 import { SpecialtiesService } from '../../specialties/services/SpecialtiesService';
 import { AvailabilityService } from '../../doctors/services/AvailabilityService';
 
@@ -11,15 +11,15 @@ import DoctorInformation from '../components/DoctorInformation';
 import AvailabilitySelector from '../components/AvailabilitySelector';
 import SelectionBanner from '../components/SelectionBanner';
 
-const DAY_NAMES = ['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB'];
-const DAY_FULL_NAME = [
+const DAY_NAMES_SHORT = ['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB'];
+const DAY_NAMES_FULL = [
   'Domingo',
   'Lunes',
   'Martes',
-  'Miercoles',
+  'Miércoles',
   'Jueves',
   'Viernes',
-  'Sabado',
+  'Sábado',
 ];
 const MONTH_NAMES = [
   'Enero',
@@ -38,9 +38,9 @@ const MONTH_NAMES = [
 
 const toDateKey = (dateObj) => {
   const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth + 1);
-  const day = String(dateObj.getDate());
-  return year + '-' + month + '-' + day;
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 const getWeekDays = (weekOffset = 0) => {
@@ -61,16 +61,15 @@ const getWeekDays = (weekOffset = 0) => {
 
     return {
       dateKey: toDateKey(current),
-      dayName: DAY_NAMES[index],
+      dayName: DAY_NAMES_SHORT[index],
       dateNumber: String(dayNum).padStart(2, '0'),
       monthShort: MONTH_NAMES[monthIndex].slice(0, 3).toUpperCase(),
       monthName: MONTH_NAMES[monthIndex],
-      fullDate: `${DAY_FULL_NAME[index]} ${dayNum} de ${MONTH_NAMES[monthIndex]} de ${year}`,
+      fullDate: `${DAY_NAMES_FULL[index]} ${dayNum} de ${MONTH_NAMES[monthIndex]} de ${year}`,
     };
   });
 };
 
-//sacada de IA
 const buildSlotsByDay = (weekDays, rawSlots) => {
   const grouped = {};
   weekDays.forEach((day) => {
@@ -81,8 +80,6 @@ const buildSlotsByDay = (weekDays, rawSlots) => {
   return grouped;
 };
 
-const getActiveDoctors = (specialty) => (specialty?.doctors ?? []).filter((doc) => doc.isActive !== false);
-
 function PatientHome() {
   const navigate = useNavigate();
 
@@ -90,12 +87,8 @@ function PatientHome() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(
-    'Seleccione una especialidad'
-  );
-  const [selectedDoctorId, setSelectedDoctorId] = useState(
-    'Seleccione un doctor'
-  );
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState('');
+  const [selectedDoctorId, setSelectedDoctorId] = useState('');
 
   const [weekOffset, setWeekOffset] = useState(0);
   const [rawSlots, setRawSlots] = useState([]);
@@ -109,37 +102,34 @@ function PatientHome() {
 
   const firstDay = weekDays[0]; // Domingo
   const lastDay = weekDays[6]; // Sábado
-
   const weekRangeLabel =
     firstDay.monthName === lastDay.monthName
-      ? 'Domingo ' +
-        Number(firstDay.dateNumber) +
-        ' - Sábado ' +
-        Number(lastDay.dateNumber) +
-        ', ' +
-        firstDay.monthName
-      : 'Domingo ' +
-        Number(firstDay.dateNumber) +
-        ' ' +
-        firstDay.monthShort +
-        ' - Sábado ' +
-        Number(lastDay.dateNumber) +
-        ' ' +
-        lastDay.monthShort;
+      ? `Domingo ${Number(firstDay.dateNumber)} - Sábado ${Number(lastDay.dateNumber)}, ${firstDay.monthName}`
+      : `Domingo ${Number(firstDay.dateNumber)} ${firstDay.monthShort} - Sábado ${Number(lastDay.dateNumber)} ${lastDay.monthShort}`;
 
+  // 1. Carga inicial de especialidades y doctores
   useEffect(() => {
     const fetchSelectorData = async () => {
       try {
         setLoading(true);
-        const specialtiesData = await SpecialtiesService.getSpecialtiesWithDoctors();
+        const [specialtiesData, doctorsData] = await Promise.all([
+          SpecialtiesService.getAllSpecialties(),
+          DoctorsService.getAllDoctors(),
+        ]);
         setSpecialties(specialtiesData);
+        setDoctors(doctorsData);
 
         if (specialtiesData.length > 0) {
-          const firstSpecialty = specialtiesData[0];
-          setSelectedSpecialtyId(firstSpecialty.id);
+          const firstSpecialtyId = specialtiesData[0].id;
+          setSelectedSpecialtyId(firstSpecialtyId);
 
-          const activeDocs = getActiveDoctors(firstSpecialty);
-          setSelectedDoctorId(activeDocs[0]?.id ?? '');
+          const firstMatch = doctorsData.find(
+            (doc) =>
+              doc.isActive && doc.specialty?.specialtyId === firstSpecialtyId
+          );
+          if (firstMatch) {
+            setSelectedDoctorId(firstMatch.id);
+          }
         }
       } catch (error) {
         console.error('Error cargando especialidades o doctores:', error);
@@ -151,12 +141,15 @@ function PatientHome() {
     fetchSelectorData();
   }, []);
 
-  const currentSpecialty = specialties.find((spec) => spec.id === selectedSpecialtyId) || null;
-  const filteredDoctors = getActiveDoctors(currentSpecialty);
+  const filteredDoctors = doctors.filter(
+    (doc) => doc.isActive && doc.specialty?.specialtyId === selectedSpecialtyId
+  );
 
-  const currentDoctor = filteredDoctors.find((doc) => doc.id === selectedDoctorId) || filteredDoctors[0] || null;
+  const currentDoctor =
+    filteredDoctors.find((doc) => doc.id === selectedDoctorId) ||
+    filteredDoctors[0] ||
+    null;
 
-<<<<<<< HEAD
   const fetchDoctorSlots = async (doctorId) => {
     if (!doctorId) {
       setRawSlots([]);
@@ -209,20 +202,15 @@ function PatientHome() {
     }
   }, [weekOffset, rawSlots]);
 
-=======
-  const doctorWithSpecialty = currentDoctor ? {...currentDoctor,specialty:currentDoctor.specialty??
-    {specialtyId: currentSpecialty?.id,name:currentSpecialty?.name,},
-  }:null;
-  
->>>>>>> 4cf41910c55a317cedb6cc33fcd21af835f0b842
   const selectedDayObj =
     weekDays.find((d) => d.dateKey === selectedDayKey) || weekDays[0];
 
   const handleSpecialtyChange = (newSpecialtyId) => {
     setSelectedSpecialtyId(newSpecialtyId);
-    const chosenSpecialty = specialties.find((spec) => spec.id === newSpecialtyId);
-    const activeDocs = getActiveDoctors(chosenSpecialty);
-    setSelectedDoctorId(activeDocs[0]?.id ?? '');
+    const firstMatch = doctors.find(
+      (doc) => doc.isActive && doc.specialty?.specialtyId === newSpecialtyId
+    );
+    setSelectedDoctorId(firstMatch ? firstMatch.id : '');
   };
 
   const handleSelectSlot = (dayKey, slotObj) => {
@@ -263,18 +251,14 @@ function PatientHome() {
         selectedDayObj={selectedDayObj}
         selectedSlot={selectedSlot}
         clinic={
-          doctorWithSpecialty?.clinic ||
+          currentDoctor?.clinic ||
           'Clínica San Rafael • Sede Central Consultorio 402'
         }
         onConfirm={() => setConfirmedModal(true)}
         disabled={!selectedSlot || !currentDoctor}
       />
 
-<<<<<<< HEAD
       {confirmedModal && currentDoctor && selectedSlot && (
-=======
-      {confirmedModal && doctorWithSpecialty && (
->>>>>>> 4cf41910c55a317cedb6cc33fcd21af835f0b842
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center animate-in fade-in zoom-in duration-150">
             <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
@@ -297,13 +281,13 @@ function PatientHome() {
 
             <div className="mt-5 p-3.5 bg-med-primary-50 border border-med-primary-200/60 rounded-xl text-xs text-med-primary-900 text-left space-y-1">
               <p>
-                <strong>Especialidad:</strong> {doctorWithSpecialty.specialty?.name}
+                <strong>Especialidad:</strong> {currentDoctor.specialty?.name}
               </p>
               <p>
-                <strong>Matrícula:</strong> {doctorWithSpecialty.licenseNumber}
+                <strong>Matrícula:</strong> {currentDoctor.licenseNumber}
               </p>
               <p>
-                <strong>Paciente:</strong> Johnathan Doe (DNI: 40.123.456) {/* ACA HAY QUE CAMBIAR ESTOS DATOS DE PACIENTE:P */}
+                <strong>Paciente:</strong> Johnathan Doe (DNI: 40.123.456)
               </p>
             </div>
 
