@@ -12,16 +12,17 @@ function PatientLoginPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({ defaultValues: { username: '', password: '' } });
+  } = useForm({ defaultValues: { username: '', dni: '' } });
 
   const navigate = useNavigate();
   const { singinPatient } = useAuth();
 
   const onValid = async (formData) => {
     try {
+      setErrorMessage('');
       const { error } = await singinPatient(
         formData.username,
-        formData.password
+        Number(formData.dni)
       );
 
       if (error) {
@@ -101,7 +102,7 @@ function PatientLoginPage() {
                 type="email"
                 placeholder="paciente@medportal.com"
                 className={`w-full border rounded-lg pl-10 pr-3.5 py-2.5 text-sm bg-white text-med-text-main placeholder-med-text-muted focus:outline-none focus:ring-2 focus:ring-med-primary-600 focus:border-transparent ${
-                  errors.username
+                  errors.email
                     ? 'border-red-400 bg-red-50/20'
                     : 'border-med-border'
                 }`}
@@ -110,9 +111,9 @@ function PatientLoginPage() {
                 })}
               />
             </div>
-            {errors.username && (
+            {errors.email && (
               <p className="text-xs text-red-500 font-medium">
-                {errors.username.message}
+                {errors.email.message}
               </p>
             )}
           </div>
@@ -142,11 +143,11 @@ function PatientLoginPage() {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 className={`w-full border rounded-lg pl-10 pr-10 py-2.5 text-sm bg-white text-med-text-main placeholder-med-text-muted focus:outline-none focus:ring-2 focus:ring-med-primary-600 focus:border-transparent ${
-                  errors.password
+                  errors.dni
                     ? 'border-red-400 bg-red-50/20'
                     : 'border-med-border'
                 }`}
-                {...register('password', {
+                {...register('dni', {
                   required: 'El DNI es obligatorio',
                 })}
               />
@@ -194,9 +195,9 @@ function PatientLoginPage() {
                 )}
               </button>
             </div>
-            {errors.password && (
+            {errors.dni && (
               <p className="text-xs text-red-500 font-medium">
-                {errors.password.message}
+                {errors.dni.message}
               </p>
             )}
           </div>

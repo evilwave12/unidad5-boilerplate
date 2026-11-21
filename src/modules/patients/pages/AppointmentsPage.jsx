@@ -4,11 +4,12 @@ import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import AppointmentCard from '../components/AppointmentCard';
 import { AppointmentService } from '../../appointments/services/AppointmentService';
+import useAuth  from '../../auth/hook/useAuth'; 
 
-const TEST_PATIENT_DNI = '40123456';
 
 function AppointmentsPage() {
   const navigate = useNavigate();
+  const {dni} = useAuth();
 
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +17,7 @@ function AppointmentsPage() {
   const [cancellingId, setCancellingId] = useState(null);
 
   useEffect(() => {
+    if(!dni) return;
     const fetchAppointments = async () => {
       try {
         setLoading(true);
@@ -33,7 +35,7 @@ function AppointmentsPage() {
     };
 
     fetchAppointments();
-  }, []);
+  }, [dni]);
 
   const handleCancel = async (appointment) => {
     const id = appointment.appointmentId;
