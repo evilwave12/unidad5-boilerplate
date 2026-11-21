@@ -6,7 +6,9 @@ function AppointmentsFilterForm({
   appliedFilters,
   specialties,
   doctors,
+  allDoctors = doctors,
   loading,
+  loadingCatalogs = false,
   lastUpdated,
   onInputChange,
   onApplyFilters,
@@ -19,7 +21,7 @@ function AppointmentsFilterForm({
   const selectedSpecialtyName =
     selectedSpecialty?.specialtyName ?? selectedSpecialty?.name;
 
-  const selectedDoctorName = doctors.find(
+  const selectedDoctorName = allDoctors.find(
     (d) => String(d.doctorId ?? d.id) === String(appliedFilters.doctorId)
   )?.name;
 
@@ -89,22 +91,32 @@ function AppointmentsFilterForm({
           <label className="text-xs font-semibold text-med-text-sub">
             Especialidad
           </label>
-          <select
-            value={filters.specialtyId}
-            onChange={(e) => onInputChange('specialtyId', e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-white border border-med-border rounded-lg text-med-text-main focus:outline-none focus:ring-1 focus:ring-med-primary-600"
-          >
-            <option value="">Todas las Especialidades</option>
-            {specialties.map((spec) => {
-              const id = spec.specialtyId ?? spec.id;
-              const label = spec.specialtyName ?? spec.name;
-              return (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              );
-            })}
-          </select>
+          <div className="relative">
+            <select
+              value={filters.specialtyId}
+              onChange={(e) => onInputChange('specialtyId', e.target.value)}
+              disabled={loadingCatalogs}
+              className="w-full appearance-none px-3 py-2 text-xs bg-white border border-med-border rounded-lg text-med-text-main focus:outline-none focus:ring-1 focus:ring-med-primary-600 pr-8 cursor-pointer disabled:bg-gray-50 disabled:text-med-text-muted"
+            >
+              <option value="">
+                {loadingCatalogs
+                  ? 'Cargando especialidades...'
+                  : 'Todas las especialidades'}
+              </option>
+              {specialties.map((spec) => {
+                const id = spec.specialtyId ?? spec.id;
+                const name = spec.specialtyName ?? spec.name;
+                return (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                );
+              })}
+            </select>
+            <span className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-[10px] text-med-text-muted">
+              ▼
+            </span>
+          </div>
         </div>
 
         {/* Doctor */}
@@ -112,23 +124,37 @@ function AppointmentsFilterForm({
           <label className="text-xs font-semibold text-med-text-sub">
             Doctor
           </label>
-          <select
-            value={filters.doctorId}
-            onChange={(e) => onInputChange('doctorId', e.target.value)}
-            className="w-full px-3 py-2 text-xs bg-white border border-med-border rounded-lg text-med-text-main focus:outline-none focus:ring-1 focus:ring-med-primary-600"
-          >
-            <option value="">Todos los Doctores</option>
-            {doctors.map((doc) => {
-              const id = doc.doctorId ?? doc.id;
-              return (
-                <option key={id} value={id}>
-                  {doc.name}
-                </option>
-              );
-            })}
-          </select>
+          <div className="relative">
+            <select
+              value={filters.doctorId}
+              onChange={(e) => onInputChange('doctorId', e.target.value)}
+              disabled={
+                loadingCatalogs ||
+                (Boolean(filters.specialtyId) && doctors.length === 0)
+              }
+              className="w-full appearance-none px-3 py-2 text-xs bg-white border border-med-border rounded-lg text-med-text-main focus:outline-none focus:ring-1 focus:ring-med-primary-600 pr-8 cursor-pointer disabled:bg-gray-50 disabled:text-med-text-muted"
+            >
+              <option value="">
+                {loadingCatalogs
+                  ? 'Cargando doctores...'
+                  : filters.specialtyId && doctors.length === 0
+                    ? 'No hay doctores en esta especialidad'
+                    : 'Todos los doctores'}
+              </option>
+              {doctors.map((doc) => {
+                const id = doc.doctorId ?? doc.id;
+                return (
+                  <option key={id} value={id}>
+                    {doc.name}
+                  </option>
+                );
+              })}
+            </select>
+            <span className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-[10px] text-med-text-muted">
+              ▼
+            </span>
+          </div>
         </div>
-
         {/* Fecha */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-med-text-sub">

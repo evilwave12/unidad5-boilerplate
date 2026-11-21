@@ -18,6 +18,7 @@ function AppointmentsSearchPage() {
 
   const [specialties, setSpecialties] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [loadingCatalogs, setLoadingCatalogs] = useState(true);
 
   const [appointments, setAppointments] = useState([]);
   const [totalCountAppointments, setTotalCountAppointments] = useState(0);
@@ -31,6 +32,7 @@ function AppointmentsSearchPage() {
   useEffect(() => {
     const loadCatalogs = async () => {
       try {
+        setLoadingCatalogs(true);
         const [specialtiesData, doctorsData] = await Promise.all([
           AppointmentService.getSpecialties(),
           AppointmentService.getDoctors(),
@@ -39,6 +41,8 @@ function AppointmentsSearchPage() {
         setDoctors(doctorsData);
       } catch (err) {
         console.error('Error cargando catálogos de filtros:', err);
+      } finally {
+        setLoadingCatalogs(false);
       }
     };
 
@@ -78,8 +82,38 @@ function AppointmentsSearchPage() {
     fetchAppointments();
   }, [appliedFilters, pageIndex]);
 
+  const selectedSpecialtyObj = specialties.find(
+    (s) => String(s.specialtyId ?? s.id) === String(filters.specialtyId)
+  );
+
+  const filteredDoctors = filters.specialtyId
+    ? doctors.filter((doc) => {
+        const docSpecialtyId =
+          doc.specialtyId ?? doc.specialty?.id ?? doc.specialty?.specialtyId;
+
+        if (docSpecialtyId !== undefined && docSpecialtyId !== null) {
+          return String(docSpecialtyId) === String(filters.specialtyId);
+        }
+
+        const docSpecialtyName =
+          doc.specialty?.name ?? doc.specialty?.specialtyName;
+        const targetSpecialtyName =
+          selectedSpecialtyObj?.name ?? selectedSpecialtyObj?.specialtyName;
+
+        return Boolean(
+          docSpecialtyName &&
+            targetSpecialtyName &&
+            docSpecialtyName.toLowerCase() === targetSpecialtyName.toLowerCase()
+        );
+      })
+    : doctors;
+
   const handleInputChange = (field, value) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
+    setFilters((prev) => ({
+      ...prev,
+      [field]: value,
+      ...(field === 'specialtyId' ? { doctorId: '' } : {}),
+    }));
   };
 
   const handleApplyFilters = (e) => {
@@ -122,8 +156,10 @@ function AppointmentsSearchPage() {
         filters={filters}
         appliedFilters={appliedFilters}
         specialties={specialties}
-        doctors={doctors}
+        doctors={filteredDoctors}
+        allDoctors={doctors}
         loading={loading}
+        loadingCatalogs={loadingCatalogs}
         lastUpdated={lastUpdated}
         onInputChange={handleInputChange}
         onApplyFilters={handleApplyFilters}
