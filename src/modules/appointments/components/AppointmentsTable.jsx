@@ -11,7 +11,7 @@ const STATUS_CONFIG = {
     badgeClass: 'bg-med-active-bg text-med-active-text',
     dotClass: 'bg-med-active-text',
   },
-  0: {
+  1: {
     label: 'CONFIRMADO',
     badgeClass: 'bg-med-active-bg text-med-active-text',
     dotClass: 'bg-med-active-text',
@@ -26,7 +26,7 @@ const STATUS_CONFIG = {
     badgeClass: 'bg-slate-100 text-slate-700',
     dotClass: 'bg-slate-500',
   },
-  1: {
+  3: {
     label: 'COMPLETADO',
     badgeClass: 'bg-slate-100 text-slate-700',
     dotClass: 'bg-slate-500',
@@ -214,8 +214,8 @@ function AppointmentsTable({
       {/* Paginador inferior */}
       <div className="p-4 bg-med-primary-50/50 border-t border-med-border flex items-center justify-between text-xs text-med-text-muted">
         <span className="flex items-center gap-1">
-          Mostrando {appointments.length} de {totalCountAppointments} registros (Página{' '}
-          {pageIndex} de {totalPages})
+          Mostrando {appointments.length} de {totalCountAppointments} registros
+          (Página {pageIndex} de {totalPages})
         </span>
         <div className="flex items-center gap-1">
           <button
@@ -224,7 +224,7 @@ function AppointmentsTable({
             onClick={() => onPageChange(Math.max(1, pageIndex - 1))}
             className="w-9 h-9 inline-flex items-center justify-center border border-med-border rounded-md bg-white text-med-text-sub text-3xl leading-none pb-0.5 hover:bg-gray-50 disabled:opacity-50"
           >
-       
+            ‹
           </button>
           <button
             type="button"
