@@ -5,7 +5,7 @@ function SelectionSummaryBanner({
   selectedSlot,
   clinic,
   onConfirm,
-  disable = false,
+  disabled = false,
 }) {
   return (
     <div className="bg-med-primary-50 border border-med-primary-200/60 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -28,7 +28,7 @@ function SelectionSummaryBanner({
 
       <Button
         type="button"
-        disable={disable}
+        disable={disabled}
         onClick={onConfirm}
         className="flex items-center justify-center gap-2 bg-med-primary-900 hover:bg-med-primary-800 text-white font-medium py-3 px-6 rounded-xl shadow-md text-sm shrink-0"
       >
