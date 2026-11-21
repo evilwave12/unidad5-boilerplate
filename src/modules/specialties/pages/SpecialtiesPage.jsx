@@ -56,27 +56,24 @@ function SpecialtiesPage() {
   };
 
   // Handler de eliminar
-  const handleOpenDelete = async (spec) => {
-    try {
-      await SpecialtiesService.deleteSpecialty(spec.id);
-
-      //si el elemento era el unico en una pagina, retrocede.
-      if (specialties.length === 1 && pageIndex > 1) {
-        setPageIndex(pageIndex - 1);
-      } else {
-        await fetchSpecialties();
-      }
-
-      alert('La especialidad fue eliminada correctamente.');
-    } catch (error) {
-      if (error.response?.status === 409) {
-        alert('La especialidad se encuentra inactiva.');
-      } else {
-        alert('No se pudo eliminar la especialidad, intentelo nuevamente.');
-      }
+  const handleDelete = async (spec) => {
+  try {
+    await SpecialtiesService.deleteSpecialty(spec.id);
+    if (specialties.length === 1 && pageIndex > 1) {
+      setPageIndex(pageIndex - 1);
+    } else {
+      await fetchSpecialties();
     }
-  };
 
+    setSpecialtyToDelete(null); // cierra el modal
+  } catch (error) {
+    if (error.response?.status === 409) {
+      alert('La especialidad se encuentra inactiva.');
+    } else {
+      alert('No se pudo eliminar la especialidad, inténtelo nuevamente.');
+    }
+  }
+};
   /*const filteredSpecialties = specialties.filter(
     (item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -145,7 +142,7 @@ function SpecialtiesPage() {
         pageIndex={pageIndex}
         pageSize={pageSize}
         onPageChange={setPageIndex}
-        onDelete={handleOpenDelete}
+        onDelete={(spec) => setSpecialtyToDelete(spec)} //"botón" de aviso para avisar que se quiere borrar una especialidad
       />
 
       {/* Modal de creación */}
@@ -159,7 +156,7 @@ function SpecialtiesPage() {
           onCancel={() => setIsCreateModalOpen(false)}
         />
       </Modal>
-
+      
       {/*Modal de confirmación de borrado*/}
       <Modal
         isOpen={specialtyToDelete !== null}
@@ -182,7 +179,7 @@ function SpecialtiesPage() {
               Cancelar
             </Button>
             <Button
-              onClick={handleOpenDelete}
+              onClick={() => handleDelete(specialtyToDelete)}
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               Eliminar

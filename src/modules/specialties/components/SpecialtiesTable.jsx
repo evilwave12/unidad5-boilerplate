@@ -98,7 +98,7 @@ function SpecialtiesTable({
                       <button
                         title="Eliminar especialidad"
                         className="p-1.5 rounded-lg hover:bg-red-50 text-med-danger-text transition"
-                        onClick={() => onDelete(spec)}
+                        onClick={() => onDelete(spec)} //avisa del evento del botón
                       >
                         <svg
                           className="w-4 h-4"
