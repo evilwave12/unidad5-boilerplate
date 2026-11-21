@@ -107,9 +107,9 @@ const routes = [
   },
 ];
 
-function App() {
-  const router = createBrowserRouter(routes);
+const router = createBrowserRouter(routes);
 
+function App() {
   return (
     <AuthProvider>
       <RouterProvider router={router} />
