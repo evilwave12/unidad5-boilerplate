@@ -23,7 +23,7 @@ function AppointmentsPage() {
         setLoading(true);
         setError('');
         const data = await AppointmentService.getPatientAppointments(
-          TEST_PATIENT_DNI
+          dni
         );
         setAppointments(data);
       } catch (err) {

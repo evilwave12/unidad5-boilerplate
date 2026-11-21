@@ -12,14 +12,14 @@ function AdminLoginPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({ defaultValues: { username: '', password: '' } });
+  } = useForm({ defaultValues: { email: '', password: '' } });
 
   const navigate = useNavigate();
   const { singinAdmin } = useAuth();
 
   const onValid = async (formData) => {
     try {
-      const { error } = await singinAdmin(formData.username, formData.password);
+      const { error } = await singinAdmin(formData.email, formData.password);
 
       if (error) {
         setErrorMessage(
@@ -108,7 +108,7 @@ function AdminLoginPage() {
                       ? 'border-red-400 bg-red-50/20'
                       : 'border-med-border'
                   }`}
-                  {...register('username', {
+                  {...register('email', {
                     required: 'El correo electrónico es obligatorio',
                   })}
                 />

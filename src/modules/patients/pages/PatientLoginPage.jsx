@@ -12,18 +12,14 @@ function PatientLoginPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({ defaultValues: { username: '', dni: '' } });
+  } = useForm({ defaultValues: { email: '', dni: '' } });
 
   const navigate = useNavigate();
   const { singinPatient } = useAuth();
 
   const onValid = async (formData) => {
     try {
-      setErrorMessage('');
-      const { error } = await singinPatient(
-        formData.username,
-        Number(formData.dni)
-      );
+      const { error } = await singinPatient(formData.email, Number(formData.dni));
 
       if (error) {
         setErrorMessage(error.frontendErrorMessage || 'Credenciales inválidas');
@@ -106,7 +102,7 @@ function PatientLoginPage() {
                     ? 'border-red-400 bg-red-50/20'
                     : 'border-med-border'
                 }`}
-                {...register('username', {
+                {...register('email', {
                   required: 'El correo electrónico es obligatorio',
                 })}
               />
