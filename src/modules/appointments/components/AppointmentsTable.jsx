@@ -1,4 +1,5 @@
 import Card from '../../shared/components/Card';
+import TablePagination from '../../shared/components/TablePagination';
 
 const STATUS_CONFIG = {
   Booked: {
@@ -76,8 +77,6 @@ function AppointmentsTable({
   onPageChange,
   onSelectAppointment,
 }) {
-  const totalPages = Math.max(1, Math.ceil(totalCountAppointments / pageSize));
-
   return (
     <Card className="p-0 overflow-hidden border-med-border">
       <div className="p-5 border-b border-med-border flex items-center justify-between">
@@ -211,31 +210,13 @@ function AppointmentsTable({
         </table>
       </div>
 
-      {/* Paginador inferior */}
-      <div className="p-4 bg-med-primary-50/50 border-t border-med-border flex items-center justify-between text-xs text-med-text-muted">
-        <span className="flex items-center gap-1">
-          Mostrando {appointments.length} de {totalCountAppointments} registros
-          (Página {pageIndex} de {totalPages})
-        </span>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            disabled={pageIndex <= 1 || loading}
-            onClick={() => onPageChange(Math.max(1, pageIndex - 1))}
-            className="w-9 h-9 inline-flex items-center justify-center border border-med-border rounded-md bg-white text-med-text-sub text-3xl leading-none pb-0.5 hover:bg-gray-50 disabled:opacity-50"
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            disabled={pageIndex >= totalPages || loading}
-            onClick={() => onPageChange(Math.min(totalPages, pageIndex + 1))}
-            className="w-9 h-9 inline-flex items-center justify-center border border-med-border rounded-md bg-white text-med-text-sub text-3xl leading-none pb-0.5 hover:bg-gray-50 disabled:opacity-50"
-          >
-            ›
-          </button>
-        </div>
-      </div>
+      <TablePagination
+        currentPage={pageIndex}
+        totalItems={totalCountAppointments}
+        pageSize={pageSize}
+        disabled={loading}
+        onPageChange={onPageChange}
+      />
     </Card>
   );
 }
