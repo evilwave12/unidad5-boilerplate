@@ -92,6 +92,12 @@ function OverviewPage() {
         </div>
       </div>
 
+      <DashboardCards
+        totalCountDoctors={totalCountDoctors}
+        totalCountSpecialties={totalCountSpecialties}
+        totalCountAppointments={totalCountAppointments}
+      />
+
       {/* Directorio de Profesionales Médicos (Tabla Resumen) */}
       <Card className="p-0 overflow-hidden border-med-border">
         <DashboardTable
