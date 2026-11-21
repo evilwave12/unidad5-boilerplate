@@ -57,7 +57,7 @@ function AppointmentsSearchPage() {
           pageSize: PAGE_SIZE,
         });
         setAppointments(result.items);
-        setTotalCount(result.totalCount);
+        setTotalCountAppointments(result.totalCountAppointments);
         // Actualizar la hora de la última búsqueda
         setLastUpdated(
           new Date().toLocaleTimeString('es-AR', {
@@ -138,7 +138,7 @@ function AppointmentsSearchPage() {
         fallbackDate={appliedFilters.date}
         pageIndex={pageIndex}
         pageSize={PAGE_SIZE}
-        totalCount={totalCount}
+        totalCount={totalCountAppointments}
         onPageChange={setPageIndex}
         onSelectAppointment={handleSelectAppointment}
       />
