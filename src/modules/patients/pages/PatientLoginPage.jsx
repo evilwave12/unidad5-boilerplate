@@ -96,7 +96,7 @@ function PatientLoginPage() {
               </span>
               <input
                 type="email"
-                placeholder="paciente@medportal.com"
+                placeholder="camila.herrera@mail.com"
                 className={`w-full border rounded-lg pl-10 pr-3.5 py-2.5 text-sm bg-white text-med-text-main placeholder-med-text-muted focus:outline-none focus:ring-2 focus:ring-med-primary-600 focus:border-transparent ${
                   errors.email
                     ? 'border-red-400 bg-red-50/20'
@@ -205,8 +205,8 @@ function PatientLoginPage() {
           <div className="bg-med-primary-50 border border-med-primary-200/60 rounded-lg p-2.5 text-center text-xs text-med-primary-900">
             <span className="font-semibold">Credenciales de prueba:</span>
             <br />
-            Email: <code>paciente@medportal.com</code> | Clave:{' '}
-            <code>paciente123</code>
+            Email: <code>camila.herrera@mail.com</code> | Clave:{' '}
+            <code>39012345</code>
           </div>
 
           {errorMessage && (

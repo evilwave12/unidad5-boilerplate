@@ -102,7 +102,7 @@ function AdminLoginPage() {
                 </span>
                 <input
                   type="email"
-                  placeholder="admin@medportal.com"
+                  placeholder="soyAdmin@gmail.com"
                   className={`w-full border rounded-lg pl-10 pr-3.5 py-2.5 text-sm bg-white text-med-text-main placeholder-med-text-muted focus:outline-none focus:ring-2 focus:ring-med-primary-600 focus:border-transparent ${
                     errors.username
                       ? 'border-red-400 bg-red-50/20'
@@ -123,7 +123,7 @@ function AdminLoginPage() {
             {/* Contraseña */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-med-text-main">
-                DNI
+                Contraseña
               </label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-med-text-muted">
@@ -150,14 +150,14 @@ function AdminLoginPage() {
                       : 'border-med-border'
                   }`}
                   {...register('password', {
-                    required: 'El DNI es obligatorio',
+                    required: 'La contraseña es obligatoria',
                   })}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Ocultar DNI' : 'Mostrar DNI'}
-                  title={showPassword ? 'Ocultar DNI' : 'Mostrar DNI'}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-med-text-muted hover:text-med-text-main"
                 >
                   {showPassword ? (
@@ -216,8 +216,8 @@ function AdminLoginPage() {
             <div className="bg-med-primary-50 border border-med-primary-200/60 rounded-lg p-2.5 text-center text-xs text-med-primary-900">
               <span className="font-semibold">Credenciales de prueba:</span>
               <br />
-              Email: <code>admin@medportal.com</code> | Clave:{' '}
-              <code>admin123</code>
+              Email: <code>soyAdmin@gmail.com</code> | Clave:{' '}
+              <code>Admin123!</code>
             </div>
 
             {/* Error Message */}
