@@ -1,10 +1,11 @@
-import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
 import Modal from '../../shared/components/Modal';
+import useDebounce from '../../shared/hooks/useDebounce';
+import usePaginatedFetch from '../../shared/hooks/usePaginatedFetch';
 import NewDoctorForm from '../components/NewDoctorForm';
 import DoctorsTable from '../components/DoctorsTable';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { getDoctors, deleteDoctor } from '../services/DoctorsService';
 
 function DoctorsPage() {
@@ -13,98 +14,52 @@ function DoctorsPage() {
   const [doctorToDelete, setDoctorToDelete] = useState(null);
 
   const navigate = useNavigate();
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const [doctors, setDoctors] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pageIndex, setPageIndex] = useState(1);
-  const pageSize = 10;
-  const [totalCount, setTotalCount] = useState(0);
-  //const [errorMessage, setErrorMessage] = useState('');
+  const fetchDoctors = useCallback(
+    ({ pageIndex, pageSize }) =>
+      getDoctors(pageSize, pageIndex, debouncedSearch),
+    [debouncedSearch]
+  );
 
-  
+  const {
+    data: doctors,
+    totalCount,
+    pageIndex,
+    pageSize,
+    setPageIndex,
+    isLoading,
+    refetch,
+  } = usePaginatedFetch(fetchDoctors, { pageSize: 10 });
+
   const handleOpenCreateModal = () => {
     setIsCreateModalOpen(true);
   };
 
-//Handler de crear :p
   const handleDoctorCreated = () => {
     setIsCreateModalOpen(false);
-    fetchDoctors();
+    refetch();
   };
 
-  // Handler de eliminar
-    const handleDoctorDelete = async (doc) => {
-      try {
-        await deleteDoctor(doc.id);
-        if (doctors.length === 1 && pageIndex > 1) {
-          setPageIndex(pageIndex - 1);
-        } else {
-          await fetchDoctors();
-        }
-    
-        setDoctorToDelete(null); // cierra el modal
-      } catch (error) {
-        if (error.response?.status === 400) {
-          alert('El doctor se encuentra inactivo.');
-        } else {
-          alert('No se pudo eliminar el doctor, inténtelo nuevamente.');
-        }
-      }
-    };
-  /*const fetchDoctors = useCallback(async () => {
+  const handleDoctorDelete = async (doc) => {
     try {
-      setIsLoading(true);
-      const result = await getDoctors(pageSize, pageIndex);
-      console.log('Estructura real de getDoctors:', result);
+      await deleteDoctor(doc.id);
 
-      const items = Array.isArray(result)
-        ? result
-        : (result?.data ?? result?.items ?? []);
-
-      setDoctors(items);
-      setTotalCount(result?.total ?? result?.totalCount ?? items.length);
-    } catch (error) {
-      console.error('Error al cargar doctores:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pageIndex]);
-
-  useEffect(() => {
-    fetchDoctors();
-  }, [fetchDoctors]);
-
-  const filteredDoctors = doctors.filter(
-    (doc) =>
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.specialty.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  );*/
-
-  const fetchDoctors = useCallback(async () => {
-      try {
-        setIsLoading(true);
-        const result = await getDoctors(
-          pageSize,
-          pageIndex,
-          searchTerm
-        );
-        /*const items = result.items ?? result.data ?? result ?? [];*/
-        setDoctors(result.data ?? []);
-        setTotalCount(result.total ?? 0);
-      } catch (error) {
-        console.error('Error al cargar doctores:', error);
-      } finally {
-        setIsLoading(false);
+      if (doctors.length === 1 && pageIndex > 1) {
+        setPageIndex(pageIndex - 1);
+      } else {
+        await refetch();
       }
-    }, [pageIndex, searchTerm]);
 
-    useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchDoctors();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [fetchDoctors]);
+      setDoctorToDelete(null);
+    } catch (error) {
+      if (error.response?.status === 400) {
+        alert('El doctor se encuentra inactivo.');
+      } else {
+        alert('No se pudo eliminar el doctor, inténtelo nuevamente.');
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -141,10 +96,7 @@ function DoctorsPage() {
               type="text"
               placeholder="Buscar doctor por nombre..."
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPageIndex(1); //volver siempre a la página 1
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-med-border rounded-lg text-med-text-main placeholder-med-text-muted focus:outline-none focus:ring-1 focus:ring-med-primary-600"
             />
           </div>

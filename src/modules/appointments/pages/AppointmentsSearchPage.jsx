@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import usePaginatedFetch from '../../shared/hooks/usePaginatedFetch';
 import AppointmentService from '../services/AppointmentService';
 import AppointmentsFilterForm from '../components/AppointmentsFilterForm';
 import AppointmentsTable from '../components/AppointmentsTable';
@@ -19,13 +20,6 @@ function AppointmentsSearchPage() {
   const [specialties, setSpecialties] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [loadingCatalogs, setLoadingCatalogs] = useState(true);
-
-  const [appointments, setAppointments] = useState([]);
-  const [totalCountAppointments, setTotalCountAppointments] = useState(0);
-  const [pageIndex, setPageIndex] = useState(1);
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState('hace un momento');
 
   // Carga de especialidades y doctores para los <select>
@@ -37,6 +31,7 @@ function AppointmentsSearchPage() {
           AppointmentService.getSpecialties(),
           AppointmentService.getDoctors(),
         ]);
+
         setSpecialties(specialtiesData);
         setDoctors(doctorsData);
       } catch (err) {
@@ -49,38 +44,38 @@ function AppointmentsSearchPage() {
     loadCatalogs();
   }, []);
 
-  // Bsqueda paginada cada vez que cambian los filtros aplicados o la página
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await AppointmentService.getAppointmentsBySearch({
-          ...appliedFilters,
-          pageIndex,
-          pageSize: PAGE_SIZE,
-        });
-        setAppointments(result.items);
-        setTotalCountAppointments(result.totalCount);
-        // Actualizar la hora de la última búsqueda
-        setLastUpdated(
-          new Date().toLocaleTimeString('es-AR', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })
-        );
-      } catch (err) {
-        console.error('Error al buscar citas:', err);
-        setError('No se pudieron cargar los registros de citas.');
-        setAppointments([]);
-        setTotalCountAppointments(0);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchAppointments = useCallback(
+    async ({ pageIndex, pageSize }) => {
+      const result = await AppointmentService.getAppointmentsBySearch({
+        ...appliedFilters,
+        pageIndex,
+        pageSize,
+      });
 
-    fetchAppointments();
-  }, [appliedFilters, pageIndex]);
+      setLastUpdated(
+        new Date().toLocaleTimeString('es-AR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      );
+
+      return result;
+    },
+    [appliedFilters]
+  );
+
+  const {
+    data: appointments,
+    totalCount: totalCountAppointments,
+    pageIndex,
+    setPageIndex,
+    isLoading: loading,
+    error: fetchError,
+  } = usePaginatedFetch(fetchAppointments, { pageSize: PAGE_SIZE });
+
+  const error = fetchError
+    ? 'No se pudieron cargar los registros de citas.'
+    : null;
 
   const selectedSpecialtyObj = specialties.find(
     (s) => String(s.specialtyId ?? s.id) === String(filters.specialtyId)
@@ -118,21 +113,19 @@ function AppointmentsSearchPage() {
 
   const handleApplyFilters = (e) => {
     e.preventDefault();
-    setPageIndex(1);
     setAppliedFilters({ ...filters });
   };
 
   const handleClearFilters = () => {
     setFilters(INITIAL_FILTERS);
-    setAppliedFilters(INITIAL_FILTERS);
-    setPageIndex(1);
+    setAppliedFilters({ ...INITIAL_FILTERS });
   };
 
   const handleRemoveSingleFilter = (field) => {
     const updated = { ...appliedFilters, [field]: '' };
+
     setFilters(updated);
     setAppliedFilters(updated);
-    setPageIndex(1);
   };
 
   const handleSelectAppointment = (item) => {

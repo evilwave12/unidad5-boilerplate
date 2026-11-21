@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import Card from '../../shared/components/Card';
 import Button from '../../shared/components/Button';
+import useDebounce from '../../shared/hooks/useDebounce';
+import usePaginatedFetch from '../../shared/hooks/usePaginatedFetch';
 import DashboardTable from '../components/DashboardTable';
 import DashboardCards from '../components/DashboardCards';
 import { useState, useEffect, useCallback } from 'react';
@@ -12,45 +14,38 @@ function OverviewPage() {
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [doctors, setDoctors] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pageIndex, setPageIndex] = useState(1);
-  const pageSize = 10;
-  const [totalCountDoctors, setTotalCountDoctors] = useState(0);
   const [totalDoctorsGlobal, setTotalDoctorsGlobal] = useState(0);
   const [totalCountSpecialties, setTotalCountSpecialties] = useState(0);
   const [totalCountAppointments, setTotalCountAppointments] = useState(0);
 
-  const fetchDoctors = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const result = await getDoctors(pageSize, pageIndex, searchTerm);
-      /*const items = result.items ?? result.data ?? result ?? [];*/
-      setDoctors(result.data ?? []);
-      setTotalCountDoctors(result.total ?? 0);
-    } catch (error) {
-      console.error('Error al cargar doctores:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pageIndex, searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchDoctors();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [fetchDoctors]);
+  const fetchDoctors = useCallback(
+    ({ pageIndex, pageSize }) =>
+      getDoctors(pageSize, pageIndex, debouncedSearch),
+    [debouncedSearch]
+  );
+
+  const {
+    data: doctors,
+    totalCount: totalCountDoctors,
+    pageIndex,
+    pageSize,
+    setPageIndex,
+    isLoading,
+  } = usePaginatedFetch(fetchDoctors, { pageSize: 10 });
 
   useEffect(() => {
     const fetchTotalDoctors = async () => {
       try {
         const result = await getDoctors(1, 1);
+
         setTotalDoctorsGlobal(result?.total ?? result?.length ?? 0);
       } catch (error) {
         console.error('Error al cargar doctores:', error);
       }
     };
+
     fetchTotalDoctors();
   }, []);
 
@@ -58,33 +53,35 @@ function OverviewPage() {
     const fetchSpecialties = async () => {
       try {
         const result = await getSpecialties(1, 1);
+
         setTotalCountSpecialties(result?.total ?? result?.length ?? 0);
       } catch (error) {
         console.error('Error al cargar especialidades:', error);
       }
     };
+
     fetchSpecialties();
   }, []);
 
   useEffect(() => {
-  const fetchAppointments = async () => {
-    try {
-      const result = await getAppointmentsBySearch({
-        pageIndex: 1,
-        pageSize: 1,
-      });
-      setTotalCountAppointments(result?.totalCount ?? 0);
-    } catch (error) {
-      console.error('Error al cargar citas:', error);
-    }
-  };
-  fetchAppointments();
-}, []);
+    const fetchAppointments = async () => {
+      try {
+        const result = await getAppointmentsBySearch({
+          pageIndex: 1,
+          pageSize: 1,
+        });
 
-  // handler del buscador
+        setTotalCountAppointments(result?.totalCount ?? 0);
+      } catch (error) {
+        console.error('Error al cargar citas:', error);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
+
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setPageIndex(1);
   };
 
   return (

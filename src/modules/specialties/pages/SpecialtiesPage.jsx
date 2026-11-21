@@ -1,84 +1,59 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Button from '../../shared/components/Button';
 import Modal from '../../shared/components/Modal';
+import useDebounce from '../../shared/hooks/useDebounce';
+import usePaginatedFetch from '../../shared/hooks/usePaginatedFetch';
 import NewSpecialtiesForm from '../components/NewSpecialtiesForm';
 import SpecialtiesTable from '../components/SpecialtiesTable';
 import { SpecialtiesService } from '../services/SpecialtiesService';
 
 function SpecialtiesPage() {
-  const [specialties, setSpecialties] = useState([]);
-
-  // Estados para búsqueda y paginación
-  const [totalCountSpecialties, setTotalCountSpecialties] = useState(0);
-  const [pageIndex, setPageIndex] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [specialtyToDelete, setSpecialtyToDelete] = useState(null);
-
-  // Estado para crear
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const pageSize = 10;
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const fetchSpecialties = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const result = await SpecialtiesService.getSpecialties(
-        pageSize,
-        pageIndex,
-        searchTerm
-      );
-      /*const items = result.items ?? result.data ?? result ?? [];*/
-      setSpecialties(result.data ?? []);
-      setTotalCountSpecialties(result.total ?? 0);
-    } catch (error) {
-      console.error('Error al cargar especialidades:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pageIndex, searchTerm]);
+  const fetchSpecialties = useCallback(
+    ({ pageIndex, pageSize }) =>
+      SpecialtiesService.getSpecialties(pageSize, pageIndex, debouncedSearch),
+    [debouncedSearch]
+  );
 
-  /*useEffect(() => {
-    fetchSpecialties();
-  }, [fetchSpecialties]);*/
+  const {
+    data: specialties,
+    totalCount: totalCountSpecialties,
+    pageIndex,
+    pageSize,
+    setPageIndex,
+    isLoading,
+    refetch,
+  } = usePaginatedFetch(fetchSpecialties, { pageSize: 10 });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchSpecialties();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [fetchSpecialties]);
-
-  //Handler de crear :p
   const handleCreatedSuccess = () => {
     setIsCreateModalOpen(false);
-    fetchSpecialties();
+    refetch();
   };
 
-  // Handler de eliminar
   const handleDelete = async (spec) => {
-  try {
-    await SpecialtiesService.deleteSpecialty(spec.id);
-    if (specialties.length === 1 && pageIndex > 1) {
-      setPageIndex(pageIndex - 1);
-    } else {
-      await fetchSpecialties();
-    }
+    try {
+      await SpecialtiesService.deleteSpecialty(spec.id);
 
-    setSpecialtyToDelete(null); // cierra el modal
-  } catch (error) {
-    if (error.response?.status === 409) {
-      alert('La especialidad se encuentra inactiva.');
-    } else {
-      alert('No se pudo eliminar la especialidad, inténtelo nuevamente.');
+      if (specialties.length === 1 && pageIndex > 1) {
+        setPageIndex(pageIndex - 1);
+      } else {
+        await refetch();
+      }
+
+      setSpecialtyToDelete(null);
+    } catch (error) {
+      if (error.response?.status === 409) {
+        alert('La especialidad se encuentra inactiva.');
+      } else {
+        alert('No se pudo eliminar la especialidad, inténtelo nuevamente.');
+      }
     }
-  }
-};
-  /*const filteredSpecialties = specialties.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );*/
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -116,10 +91,7 @@ function SpecialtiesPage() {
               type="text"
               placeholder="Buscar especialidad..."
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPageIndex(1); //volver siempre a la página 1
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-med-border rounded-lg text-med-text-main placeholder-med-text-muted focus:outline-none focus:ring-1 focus:ring-med-primary-600"
             />
           </div>
