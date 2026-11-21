@@ -1,5 +1,5 @@
 import { createContext, useState } from 'react';
-import { login } from '../services/login';
+//import { login } from '../services/login';
 import { loginAdmin } from '../services/adminLogin';
 import { loginPatient } from '../services/patientLogin';
 
@@ -12,17 +12,27 @@ function AuthProvider({ children }) {
     return Boolean(token);
   });
 
+  const [role, setRole] = useState(() => localStorage.getItem('role'));
+
   const singout = () => {
     localStorage.clear();
     setIsAuthenticated(false);
+    setRole(null);
   };
 
-  const setAuthSession = (token) => {
+  const setAuthSession = (token, userRole) => {
+    const normalizedRole = userRole?.toLowerCase() ?? null; //REVISAR
     localStorage.setItem('token', token);
+    if (normalizedRole) {
+      localStorage.setItem('role', normalizedRole);
+    } else {
+      localStorage.removeItem('role');
+    }
     setIsAuthenticated(true);
+    setRole(normalizedRole);
   };
 
-  const singin = async (username, password) => {
+  /*const singin = async (username, password) => {
     const { data, error } = await login(username, password);
 
     if (error) {
@@ -31,7 +41,7 @@ function AuthProvider({ children }) {
 
     setAuthSession(data);
     return { error: null };
-  };
+  };*/
 
   const singinAdmin = async (email, password) => {
     if ( //con esto nos logueamos cuando el back no está encendido
@@ -40,18 +50,16 @@ function AuthProvider({ children }) {
         email === 'admin@test.com') &&
       password === 'admin123'
     ) {
-      setAuthSession('mock-admin-token-12345');
+      setAuthSession('mock-admin-token-12345', 'admin');
 
       return { error: null };
     }
 
     const { data, error } = await loginAdmin(email, password);
 
-    if (error) {
-      return { error };
-    }
+    if (error) { return { error }; }
 
-    setAuthSession(data);
+    setAuthSession(data.token, data.role || 'admin');
 
     return { error: null };
   };
@@ -63,18 +71,16 @@ function AuthProvider({ children }) {
         username === 'paciente@test.com') &&
       password === 'paciente123'
     ) {
-      setAuthSession('mock-patient-token-67890');
+      setAuthSession('mock-patient-token-67890', 'user');
 
       return { error: null };
     }
 
     const { data, error } = await loginPatient(username, password);
 
-    if (error) {
-      return { error };
-    }
+    if (error) { return { error }; }
 
-    setAuthSession(data);
+    setAuthSession(data.token, data.role || 'user');
 
     return { error: null };
   };
@@ -83,7 +89,8 @@ function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         isAuthenticated,
-        singin,
+        role,
+        //singin,
         singinAdmin,
         singinPatient,
         singout,
