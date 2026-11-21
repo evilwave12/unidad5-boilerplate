@@ -5,6 +5,7 @@ function SelectionSummaryBanner({
   selectedSlot,
   clinic,
   onConfirm,
+  disable = false,
 }) {
   return (
     <div className="bg-med-primary-50 border border-med-primary-200/60 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -15,7 +16,9 @@ function SelectionSummaryBanner({
         <p className="text-base sm:text-lg font-bold text-med-primary-900 mt-0.5 flex items-center gap-2">
           <span>📅</span>
           <span>
-            {selectedDayObj.fullDate}, {selectedSlot} HS
+            {selectedSlot
+              ? `${selectedDayObj.fullDate}, ${selectedSlot.time} HS`
+              : 'Seleccione un horario disponible'}
           </span>
         </p>
         <p className="text-xs text-med-text-sub mt-0.5">
@@ -25,6 +28,7 @@ function SelectionSummaryBanner({
 
       <Button
         type="button"
+        disable={disable}
         onClick={onConfirm}
         className="flex items-center justify-center gap-2 bg-med-primary-900 hover:bg-med-primary-800 text-white font-medium py-3 px-6 rounded-xl shadow-md text-sm shrink-0"
       >

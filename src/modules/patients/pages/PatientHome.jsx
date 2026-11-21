@@ -4,31 +4,81 @@ import Button from '../../shared/components/Button';
 
 import { DoctorsService } from '../../doctors/services/DoctorsService';
 import { SpecialtiesService } from '../../specialties/services/SpecialtiesService';
-//import {AvailabilityService} from '../../doctors/services/AvailabilityService';
+import { AvailabilityService } from '../../doctors/services/AvailabilityService';
 
 import SpecialtyDoctorSelector from '../components/SpecialtyDoctorSelector';
 import DoctorInformation from '../components/DoctorInformation';
 import AvailabilitySelector from '../components/AvailabilitySelector';
 import SelectionBanner from '../components/SelectionBanner';
 
-const WEEK_DAYS = [
-  { dayName: 'LUN', dateNumber: '22', fullDate: 'Lunes 22 de Mayo de 2024' },
-  { dayName: 'MAR', dateNumber: '23', fullDate: 'Martes 23 de Mayo de 2024' },
-  {
-    dayName: 'MIE',
-    dateNumber: '24',
-    fullDate: 'Miércoles 24 de Mayo de 2024',
-  },
-  { dayName: 'JUE', dateNumber: '25', fullDate: 'Jueves 25 de Mayo de 2024' },
-  { dayName: 'VIE', dateNumber: '26', fullDate: 'Viernes 26 de Mayo de 2024' },
+const DAY_NAMES = ['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB'];
+const DAY_FULL_NAME = [
+  'Domingo',
+  'Lunes',
+  'Martes',
+  'Miercoles',
+  'Jueves',
+  'Viernes',
+  'Sabado',
+];
+const MONTH_NAMES = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
-const SLOTS_BY_DAY = {
-  22: ['08:00', '08:30', '09:00', '09:30', '10:00', '11:30'],
-  23: ['08:00', '09:00', '10:30', '11:00', '12:30'],
-  24: ['08:30', '09:30', '11:00', '11:30'],
-  25: [],
-  26: ['08:00', '08:30', '09:00', '14:00', '14:30'],
+const toDateKey = (dateObj) => {
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth + 1);
+  const day = String(dateObj.getDate());
+  return year + '-' + month + '-' + day;
+};
+
+const getWeekDays = (weekOffset = 0) => {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Dom, 1 = Lun, ..., 6 = Sab
+
+  const sunday = new Date(today);
+  sunday.setHours(0, 0, 0, 0);
+  sunday.setDate(today.getDate() - dayOfWeek + weekOffset * 7);
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const current = new Date(sunday);
+    current.setDate(sunday.getDate() + index);
+
+    const dayNum = current.getDate();
+    const monthIndex = current.getMonth();
+    const year = current.getFullYear();
+
+    return {
+      dateKey: toDateKey(current),
+      dayName: DAY_NAMES[index],
+      dateNumber: String(dayNum).padStart(2, '0'),
+      monthShort: MONTH_NAMES[monthIndex].slice(0, 3).toUpperCase(),
+      monthName: MONTH_NAMES[monthIndex],
+      fullDate: `${DAY_FULL_NAME[index]} ${dayNum} de ${MONTH_NAMES[monthIndex]} de ${year}`,
+    };
+  });
+};
+
+//sacada de IA
+const buildSlotsByDay = (weekDays, rawSlots) => {
+  const grouped = {};
+  weekDays.forEach((day) => {
+    grouped[day.dateKey] = rawSlots
+      .filter((slot) => slot.dateKey === day.dateKey)
+      .sort((a, b) => a.time.localeCompare(b.time));
+  });
+  return grouped;
 };
 
 function PatientHome() {
@@ -38,12 +88,42 @@ function PatientHome() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState('Seleccione una especialidad');
-  const [selectedDoctorId, setSelectedDoctorId] = useState('Seleccione un doctor');
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(
+    'Seleccione una especialidad'
+  );
+  const [selectedDoctorId, setSelectedDoctorId] = useState(
+    'Seleccione un doctor'
+  );
 
-  const [selectedDayNumber, setSelectedDayNumber] = useState('22');
-  const [selectedSlot, setSelectedSlot] = useState('09:30');
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [rawSlots, setRawSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
+  const [selectedDayKey, setSelectedDayKey] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState(null);
   const [confirmedModal, setConfirmedModal] = useState(false);
+
+  const weekDays = getWeekDays(weekOffset);
+
+  const firstDay = weekDays[0]; // Domingo
+  const lastDay = weekDays[6]; // Sábado
+
+  const weekRangeLabel =
+    firstDay.monthName === lastDay.monthName
+      ? 'Domingo ' +
+        Number(firstDay.dateNumber) +
+        ' - Sábado ' +
+        Number(lastDay.dateNumber) +
+        ', ' +
+        firstDay.monthName
+      : 'Domingo ' +
+        Number(firstDay.dateNumber) +
+        ' ' +
+        firstDay.monthShort +
+        ' - Sábado ' +
+        Number(lastDay.dateNumber) +
+        ' ' +
+        lastDay.monthShort;
 
   useEffect(() => {
     const fetchSelectorData = async () => {
@@ -87,8 +167,60 @@ function PatientHome() {
     filteredDoctors[0] ||
     null;
 
+  const fetchDoctorSlots = async (doctorId) => {
+    if (!doctorId) {
+      setRawSlots([]);
+      return;
+    }
+
+    try {
+      setLoadingSlots(true);
+      const data = await AvailabilityService.getSlotsByDoctor(doctorId);
+
+      // Mapea el DTO ResponseAvailabilitySlots(id, day, startTime, endTime)
+      const normalized = data.map((slot) => ({
+        id: slot.id,
+        dateKey: String(slot.day).slice(0, 10), // "YYYY-MM-DD"
+        time: String(slot.startTime).slice(0, 5), // "HH:mm"
+        endTime: String(slot.endTime).slice(0, 5),
+      }));
+
+      setRawSlots(normalized);
+    } catch (error) {
+      console.error('Error cargando slots de disponibilidad:', error);
+      setRawSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  // 2. Trae los slots reales cada vez que cambia el doctor seleccionado
+  useEffect(() => {
+    fetchDoctorSlots(currentDoctor?.id);
+  }, [currentDoctor?.id]);
+
+  const slotsByDay = buildSlotsByDay(weekDays, rawSlots);
+
+  // 3. Selecciona automáticamente el primer turno disponible al cambiar de semana o recibir nuevos slots
+  useEffect(() => {
+    const currentWeekDays = getWeekDays(weekOffset);
+    const currentSlotsByDay = buildSlotsByDay(currentWeekDays, rawSlots);
+
+    const firstDayWithSlots = currentWeekDays.find(
+      (day) => (currentSlotsByDay[day.dateKey] || []).length > 0
+    );
+
+    if (firstDayWithSlots) {
+      setSelectedDayKey(firstDayWithSlots.dateKey);
+      setSelectedSlot(currentSlotsByDay[firstDayWithSlots.dateKey][0]);
+    } else {
+      setSelectedDayKey(currentWeekDays[0]?.dateKey || '');
+      setSelectedSlot(null);
+    }
+  }, [weekOffset, rawSlots]);
+
   const selectedDayObj =
-    WEEK_DAYS.find((d) => d.dateNumber === selectedDayNumber) || WEEK_DAYS[0];
+    weekDays.find((d) => d.dateKey === selectedDayKey) || weekDays[0];
 
   const handleSpecialtyChange = (newSpecialtyId) => {
     setSelectedSpecialtyId(newSpecialtyId);
@@ -98,9 +230,9 @@ function PatientHome() {
     setSelectedDoctorId(firstMatch ? firstMatch.id : '');
   };
 
-  const handleSelectSlot = (dayNum, slot) => {
-    setSelectedDayNumber(dayNum);
-    setSelectedSlot(slot);
+  const handleSelectSlot = (dayKey, slotObj) => {
+    setSelectedDayKey(dayKey);
+    setSelectedSlot(slotObj);
   };
 
   return (
@@ -112,19 +244,24 @@ function PatientHome() {
         doctors={filteredDoctors}
         selectedDoctorId={selectedDoctorId}
         onDoctorChange={setSelectedDoctorId}
-        onSearch={() => {}}
+        onSearch={() => fetchDoctorSlots(currentDoctor?.id)}
         loading={loading}
       />
 
       <DoctorInformation doctor={currentDoctor} loading={loading} />
 
       <AvailabilitySelector
-        weekDays={WEEK_DAYS}
-        slotsByDay={SLOTS_BY_DAY}
-        selectedDayNumber={selectedDayNumber}
-        selectedSlot={selectedSlot}
-        onSelectDay={setSelectedDayNumber}
+        weekDays={weekDays}
+        weekRangeLabel={weekRangeLabel}
+        slotsByDay={slotsByDay}
+        selectedDayKey={selectedDayKey}
+        selectedSlotId={selectedSlot?.id}
+        onSelectDay={setSelectedDayKey}
         onSelectSlot={handleSelectSlot}
+        onPrevWeek={() => setWeekOffset((prev) => Math.max(0, prev - 1))}
+        onNextWeek={() => setWeekOffset((prev) => prev + 1)}
+        canGoPrev={weekOffset > 0}
+        loading={loadingSlots}
       />
 
       <SelectionBanner
@@ -135,9 +272,10 @@ function PatientHome() {
           'Clínica San Rafael • Sede Central Consultorio 402'
         }
         onConfirm={() => setConfirmedModal(true)}
+        disabled={!selectedSlot || !currentDoctor}
       />
 
-      {confirmedModal && currentDoctor && (
+      {confirmedModal && currentDoctor && selectedSlot && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 text-center animate-in fade-in zoom-in duration-150">
             <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
@@ -153,7 +291,7 @@ function PatientHome() {
               </strong>{' '}
               ha sido reservado para el{' '}
               <strong className="text-med-text-main">
-                {selectedDayObj.fullDate} a las {selectedSlot} hs
+                {selectedDayObj.fullDate} a las {selectedSlot.time} hs
               </strong>
               .
             </p>
